@@ -178,12 +178,23 @@ async function generateRecommendations(input) {
         ? {
             archetypeId: climateProfileDoc.archetypeId,
             locationName: climateProfileDoc.location?.name,
+            isRegionalArchetype: true,
+            confidenceRating: 'REGIONAL_ARCHETYPE',
             annualMeanTempC: climateProfileDoc.annualSummary?.meanTemperatureC,
             annualPrecipitationEstimateMmYear: climateProfileDoc.annualSummary?.annualPrecipitationEstimateMmYear,
+            meanSolarRadiationKwhM2Day: climateProfileDoc.annualSummary?.meanSolarRadiationKwhM2Day,
+            meanRelativeHumidityPercent: climateProfileDoc.annualSummary?.meanRelativeHumidityPercent,
+            disclosure: `Evaluated using regional NASA POWER profile for ${climateProfileDoc.location?.name || climateProfileDoc.archetypeId}. Reflects regional climatology, not unmeasured field-level microclimate.`
           }
         : {
             archetypeId: 'fallback_global_baseline',
+            locationName: 'Generalized Global Baseline',
+            isRegionalArchetype: false,
+            confidenceRating: 'GLOBAL_BASELINE_FALLBACK',
+            annualMeanTempC: 22.0,
+            annualPrecipitationEstimateMmYear: 650.0,
             note: 'Evaluated against generalized temperate/tropical baseline (no direct regional archetype assigned).',
+            disclosure: 'No matching regional NASA POWER profile; fallback baseline applied. Climate scores carry moderate confidence.'
           },
     },
     pathways: {

@@ -30,12 +30,15 @@ async function runRecommendationTests() {
         res1.pathways.economicReturn &&
         res1.pathways.soilRestoration &&
         res1.pathways.waterResilience &&
-        res1.pathways.soilRestoration.recommendedCrop.cropId === 'soybean';
+        res1.pathways.soilRestoration.recommendedCrop.cropId === 'soybean' &&
+        res1.pathways.economicReturn.recommendedCrop.cropId !== 'wheat' &&
+        res1.pathways.waterResilience.recommendedCrop.cropId !== 'wheat';
 
       console.log(`  Status: ${res1.status}`);
       console.log(`  Economic Recommendation: ${res1.pathways.economicReturn.recommendedCrop.displayName} (Score: ${res1.pathways.economicReturn.compositeScore})`);
       console.log(`  Soil Restoration Recommendation: ${res1.pathways.soilRestoration.recommendedCrop.displayName} (Score: ${res1.pathways.soilRestoration.compositeScore})`);
       console.log(`  Water Resilience Recommendation: ${res1.pathways.waterResilience.recommendedCrop.displayName} (Score: ${res1.pathways.waterResilience.compositeScore})`);
+      console.log(`  Current Crop Excluded from Alternatives: ${res1.pathways.economicReturn.recommendedCrop.cropId !== 'wheat' && res1.pathways.waterResilience.recommendedCrop.cropId !== 'wheat'}`);
       console.log(`  Result: ${pass1 ? 'PASS ✅' : 'FAIL ❌'}\n`);
       results.push({ testId: 1, name: 'Pakistan Irrigated Wheat Rotation', pass: pass1 });
     } catch (e) {

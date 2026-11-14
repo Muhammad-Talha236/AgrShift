@@ -6,6 +6,13 @@
  * 3. Water Resilience
  */
 
+// Explicit, documented scoring weights summing to 1.00 (100%)
+const SCORING_WEIGHTS = {
+  YIELD: 0.50,       // 50% - GAEZ v5 Attainable Yield & Land Suitability
+  CLIMATE: 0.35,     // 35% - NASA POWER Thermal & Moisture Compatibility
+  ROTATION: 0.15,    // 15% - Agronomic Rotation Diversity & Pathogen Break
+};
+
 /**
  * Generate rotation transition explanation between current and recommended crop.
  */
@@ -41,7 +48,7 @@ function generateRotationTransition(currentCrop, nextCrop) {
       transitionType: 'CEREAL_TO_LEGUME_BREAK',
       description: `Rotating from ${currentCrop.displayName} to legume ${nextCrop.displayName} provides biological nitrogen fixation via Rhizobium symbiosis, breaking cereal pathogen cycles.`,
       benefits: [
-        'Biological atmospheric nitrogen fixation enriches the root zone for subsequent crops.',
+        'Biological atmospheric nitrogen fixation enriches root-zone nitrogen for subsequent crops.',
         'Interrupts cereal-specific nematode, root-rot, and foliar disease cycles.',
         'Diversifies farm income with a high-protein crop.',
       ],
@@ -58,9 +65,9 @@ function generateRotationTransition(currentCrop, nextCrop) {
       transitionType: 'WATER_CONSERVING_TRANSITION',
       description: `Switching from ${currentCrop.displayName} to drought-resilient ${nextCrop.displayName} conserves moisture reserves and stabilizes yield against precipitation deficits.`,
       benefits: [
-        'High water-use efficiency (C4 photosynthetic pathway).',
+        'High water-use efficiency via C4 photosynthetic machinery.',
         'Deep root architecture accesses subsoil residual moisture.',
-        'Significantly lower irrigation energy and water cost.',
+        'Significantly lower irrigation energy and water demand.',
       ],
       precautions: [
         'Ensure local market channels or livestock feed off-take exists for grain sorghum.',
@@ -99,6 +106,7 @@ function generateRotationTransition(currentCrop, nextCrop) {
 
 /**
  * Synthesizes three independent pathways from scored eligible crops.
+ * Strict Rule: Current crop is excluded from alternative recommendations unless no alternative exists.
  * 
  * @param {Array} scoredCrops - Eligible crops enriched with yield & climate scores
  * @param {Object} [currentCrop] - User's current Crop document
@@ -112,41 +120,57 @@ function buildRotationPathways(scoredCrops, currentCrop = null, waterRegime = 'i
       soilRestoration: null,
       waterResilience: null,
       availableOptionsCount: 0,
+      rankedAlternatives: [],
+      scoringWeights: SCORING_WEIGHTS,
     };
   }
 
-  // Calculate composite hybrid score for each crop:
-  // Hybrid = 0.5 * YieldScore + 0.3 * ClimateScore + 0.2 * DiversityBonus
+  // Calculate composite hybrid score for each crop using normalized weights summing to 1.0 (100%)
   const evaluatedCrops = scoredCrops.map((c) => {
-    const yieldScore = c.yieldScoring.totalYieldScore;
-    const climateScore = c.climateScoring.totalClimateScore;
+    const yieldScore = c.yieldScoring.totalYieldScore; // 0-100
+    const climateScore = c.climateScoring.totalClimateScore; // 0-100
     const isDifferent = currentCrop ? c.cropId !== currentCrop.cropId : true;
-    const diversityBonus = isDifferent ? 20 : 5; // Reward crop rotation diversity
 
-    const compositeScore = Math.round((yieldScore * 0.5 + climateScore * 0.3 + diversityBonus) * 10) / 10;
+    // Rotation score: 100 for diverse crop rotation, 30 for monoculture continuation
+    const rotationScore = isDifferent ? 100 : 30;
+
+    // Weighted composite score (0 to 100)
+    const compositeScore = Math.round(
+      (yieldScore * SCORING_WEIGHTS.YIELD +
+        climateScore * SCORING_WEIGHTS.CLIMATE +
+        rotationScore * SCORING_WEIGHTS.ROTATION) *
+        10
+    ) / 10;
 
     return {
       ...c,
       compositeScore,
+      rotationScore,
       rotationTransition: generateRotationTransition(currentCrop, c),
     };
   });
 
+  // Strict Alternative Rotation Rule: Filter out current crop to recommend genuine alternatives
+  const alternativeCrops = currentCrop
+    ? evaluatedCrops.filter((c) => c.cropId !== currentCrop.cropId)
+    : evaluatedCrops;
+
+  // Candidate pool: use alternatives if available; fallback to all crops if only current crop is viable
+  const candidates = alternativeCrops.length > 0 ? alternativeCrops : evaluatedCrops;
+
   // Sort descending by composite score
-  const sortedByComposite = [...evaluatedCrops].sort((a, b) => b.compositeScore - a.compositeScore);
+  const sortedCandidates = [...candidates].sort((a, b) => b.compositeScore - a.compositeScore);
 
   // -------------------------------------------------------------
   // PATHWAY A: Economic Return
-  // Prioritizes highest composite yield & suitability potential
+  // Top composite yield & suitability potential among alternatives
   // -------------------------------------------------------------
-  // If possible, prefer a non-identical rotation unless no viable alternative exists
-  const nonCurrentCrops = sortedByComposite.filter((c) => !c.isCurrentCrop);
-  const economicChoice = nonCurrentCrops.length > 0 ? nonCurrentCrops[0] : sortedByComposite[0];
+  const economicChoice = sortedCandidates[0];
 
   const economicPathway = {
     strategyKey: 'ECONOMIC_RETURN',
     strategyTitle: 'Economic Return Pathway',
-    summary: `Maximizes grain and commercial output using top attainable yields under verified sovereign agro-climatic conditions.`,
+    summary: `Maximizes grain and commercial output using top attainable yields under verified sovereign agro-climatic conditions while diversifying away from previous crop monoculture.`,
     recommendedCrop: {
       cropId: economicChoice.cropId,
       displayName: economicChoice.displayName,
@@ -162,6 +186,8 @@ function buildRotationPathways(scoredCrops, currentCrop = null, waterRegime = 'i
       thermalSuitabilityScore: economicChoice.climateScoring.thermalSuitabilityScore,
       moistureSuitabilityScore: economicChoice.climateScoring.moistureSuitabilityScore,
       totalClimateScore: economicChoice.climateScoring.totalClimateScore,
+      rotationDiversityScore: economicChoice.rotationScore,
+      weightsApplied: SCORING_WEIGHTS,
     },
     keyMetrics: {
       attainableYieldKgHa: economicChoice.yieldScoring.attainableYieldBenchmarkKgHa,
@@ -173,33 +199,33 @@ function buildRotationPathways(scoredCrops, currentCrop = null, waterRegime = 'i
     disclosures: [
       economicChoice.yieldScoring.provenanceNotice,
       economicChoice.climateScoring.disclosure,
-      'Does not guarantee market price realization or local input costs.',
+      'GAEZ attainable yield represents modeled historical potential benchmark, not a guaranteed harvest forecast.',
+      'Market price realization and local input costs must be assessed independently by the farmer.',
     ],
   };
 
   // -------------------------------------------------------------
   // PATHWAY B: Soil Restoration
-  // Prioritizes eligible legume rotations (especially soybean)
+  // Prioritizes eligible legume rotations (especially soybean) among alternatives
   // -------------------------------------------------------------
-  const legumes = evaluatedCrops.filter((c) => c.agronomicProfile?.isNitrogenFixing);
+  const legumes = candidates.filter((c) => c.agronomicProfile?.isNitrogenFixing);
   let soilChoice = null;
   let soilDisclosure = null;
 
   if (legumes.length > 0) {
-    // Sort legumes by composite score
     legumes.sort((a, b) => b.compositeScore - a.compositeScore);
     soilChoice = legumes[0];
     soilDisclosure = `Prioritized ${soilChoice.displayName} as an eligible biological nitrogen-fixing legume to regenerate soil organic nitrogen without synthetic fertilizer dependency.`;
   } else {
-    // Fallback: deep-rooted pan-breaking crop or high-biomass alternative
-    const deepRooted = evaluatedCrops.filter((c) => c.agronomicProfile?.rootDepthType === 'deep' && !c.isCurrentCrop);
+    // Fallback: deep-rooted pan-breaking crop
+    const deepRooted = candidates.filter((c) => c.agronomicProfile?.rootDepthType === 'deep');
     if (deepRooted.length > 0) {
       deepRooted.sort((a, b) => b.compositeScore - a.compositeScore);
       soilChoice = deepRooted[0];
       soilDisclosure = `No nitrogen-fixing legume is verified eligible under current regime. Prioritized deep-rooted ${soilChoice.displayName} to break subsoil plow-pans and improve aeration.`;
     } else {
-      soilChoice = sortedByComposite[0];
-      soilDisclosure = `No distinct legume or pan-breaking crop was eligible; selected top resilient alternative.`;
+      soilChoice = sortedCandidates[0];
+      soilDisclosure = `No distinct legume or pan-breaking alternative was eligible; selected top resilient rotation alternative.`;
     }
   }
 
@@ -222,6 +248,8 @@ function buildRotationPathways(scoredCrops, currentCrop = null, waterRegime = 'i
       thermalSuitabilityScore: soilChoice.climateScoring.thermalSuitabilityScore,
       moistureSuitabilityScore: soilChoice.climateScoring.moistureSuitabilityScore,
       totalClimateScore: soilChoice.climateScoring.totalClimateScore,
+      rotationDiversityScore: soilChoice.rotationScore,
+      weightsApplied: SCORING_WEIGHTS,
     },
     keyMetrics: {
       attainableYieldKgHa: soilChoice.yieldScoring.attainableYieldBenchmarkKgHa,
@@ -231,17 +259,18 @@ function buildRotationPathways(scoredCrops, currentCrop = null, waterRegime = 'i
     },
     rotationRationale: soilChoice.rotationTransition,
     disclosures: [
-      'Expected soil fertility benefits are derived from biological nitrogen fixation agronomic science; in-situ soil nutrients and microbial biomass are not directly measured in the observation data.',
+      'Expected soil fertility benefits are derived from biological nitrogen fixation agronomy; in-situ soil nutrients and microbial biomass are not directly measured in the observation data.',
       soilChoice.yieldScoring.provenanceNotice,
       soilChoice.climateScoring.disclosure,
+      'GAEZ attainable yield represents modeled historical potential benchmark, not a guaranteed harvest forecast.',
     ],
   };
 
   // -------------------------------------------------------------
   // PATHWAY C: Water Resilience
-  // Prioritizes drought-tolerant, water-efficient crops (e.g. Sorghum)
+  // Prioritizes drought-tolerant, water-efficient crops (e.g. Sorghum) among alternatives
   // -------------------------------------------------------------
-  const droughtTolerant = evaluatedCrops.filter((c) => c.agronomicProfile?.droughtTolerance === 'high');
+  const droughtTolerant = candidates.filter((c) => c.agronomicProfile?.droughtTolerance === 'high');
   let waterChoice = null;
   let waterDisclosure = null;
 
@@ -250,19 +279,26 @@ function buildRotationPathways(scoredCrops, currentCrop = null, waterRegime = 'i
     waterChoice = droughtTolerant[0];
     waterDisclosure = `Prioritized ${waterChoice.displayName} for its high drought tolerance (C4 photosynthetic pathway) and low water requirement to mitigate water stress risk.`;
   } else {
-    // Select crop with lowest water requirement rating
-    const lowWater = evaluatedCrops.filter((c) => c.agronomicProfile?.waterRequirementRating === 'low');
+    // Select alternative with lowest water requirement rating
+    const lowWater = candidates.filter((c) => c.agronomicProfile?.waterRequirementRating === 'low');
     if (lowWater.length > 0) {
       lowWater.sort((a, b) => b.compositeScore - a.compositeScore);
       waterChoice = lowWater[0];
-      waterDisclosure = `Selected ${waterChoice.displayName} based on low water requirement rating.`;
+      waterDisclosure = `Selected ${waterChoice.displayName} based on lowest water requirement rating among eligible alternatives.`;
     } else {
-      // Best climate moisture scoring crop
-      const bestMoisture = [...evaluatedCrops].sort(
-        (a, b) => b.climateScoring.moistureSuitabilityScore - a.climateScoring.moistureSuitabilityScore
-      );
-      waterChoice = bestMoisture[0];
-      waterDisclosure = `Selected ${waterChoice.displayName} based on highest moisture suitability index under regional climatology.`;
+      // Select crop with lowest water requirement among candidates (e.g. medium before high/very_high)
+      const mediumWater = candidates.filter((c) => c.agronomicProfile?.waterRequirementRating === 'medium');
+      if (mediumWater.length > 0) {
+        mediumWater.sort((a, b) => b.compositeScore - a.compositeScore);
+        waterChoice = mediumWater[0];
+        waterDisclosure = `Selected ${waterChoice.displayName} as the most water-efficient rotation alternative available under this regime.`;
+      } else {
+        const bestMoisture = [...candidates].sort(
+          (a, b) => b.climateScoring.moistureSuitabilityScore - a.climateScoring.moistureSuitabilityScore
+        );
+        waterChoice = bestMoisture[0];
+        waterDisclosure = `Selected ${waterChoice.displayName} based on highest moisture suitability index under regional climatology.`;
+      }
     }
   }
 
@@ -285,6 +321,8 @@ function buildRotationPathways(scoredCrops, currentCrop = null, waterRegime = 'i
       thermalSuitabilityScore: waterChoice.climateScoring.thermalSuitabilityScore,
       moistureSuitabilityScore: waterChoice.climateScoring.moistureSuitabilityScore,
       totalClimateScore: waterChoice.climateScoring.totalClimateScore,
+      rotationDiversityScore: waterChoice.rotationScore,
+      weightsApplied: SCORING_WEIGHTS,
     },
     keyMetrics: {
       attainableYieldKgHa: waterChoice.yieldScoring.attainableYieldBenchmarkKgHa,
@@ -298,6 +336,7 @@ function buildRotationPathways(scoredCrops, currentCrop = null, waterRegime = 'i
       `Evaluated under ${waterRegime.toUpperCase()} management with NASA POWER estimated precipitation.`,
       waterChoice.yieldScoring.provenanceNotice,
       waterChoice.climateScoring.disclosure,
+      'GAEZ attainable yield represents modeled historical potential benchmark, not a guaranteed harvest forecast.',
     ],
   };
 
@@ -305,8 +344,8 @@ function buildRotationPathways(scoredCrops, currentCrop = null, waterRegime = 'i
     economicReturn: economicPathway,
     soilRestoration: soilPathway,
     waterResilience: waterPathway,
-    availableOptionsCount: evaluatedCrops.length,
-    rankedAlternatives: evaluatedCrops.map((c) => ({
+    availableOptionsCount: candidates.length,
+    rankedAlternatives: sortedCandidates.map((c) => ({
       cropId: c.cropId,
       displayName: c.displayName,
       compositeScore: c.compositeScore,
@@ -314,7 +353,8 @@ function buildRotationPathways(scoredCrops, currentCrop = null, waterRegime = 'i
       totalYieldScore: c.yieldScoring.totalYieldScore,
       totalClimateScore: c.climateScoring.totalClimateScore,
     })),
+    scoringWeights: SCORING_WEIGHTS,
   };
 }
 
-module.exports = { buildRotationPathways, generateRotationTransition };
+module.exports = { buildRotationPathways, generateRotationTransition, SCORING_WEIGHTS };

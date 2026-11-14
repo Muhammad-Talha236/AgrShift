@@ -1,7 +1,7 @@
 # AgriShift — Next Actionable Steps 📋
 
-**Last Updated:** 2026-11-14T17:53:30+05:00  
-**Current Status:** Phase 7 (Hybrid Recommendation Engine & API) Completed & Verified ✅  
+**Last Updated:** 2026-11-14T18:33:30+05:00  
+**Current Status:** Phase 8 (Frontend UI/UX Integration) Completed & Verified ✅  
 
 ---
 
@@ -13,21 +13,18 @@
 - [x] **Phase 5 — Testing**: Executed `dataset/scripts/test_queries.js`, all 7 verification tests passed.
 - [x] **Phase 6 — Continuous Project Log**: Maintained `EXECUTION_LOG.md` and `NEXT_STEPS.md`.
 - [x] **Phase 7 — Recommendation & Rotation Engine**: Built `backend/src/services/recommendation/`, controller, validator, and routes. 10/10 automated tests passed.
+- [x] **Phase 8 — Frontend UI/UX Integration**: Built `AssessmentWizard`, `PathwayCard`, `ScientificDisclosures`, `RankedAlternativesTable`, `IneligibleCropsAudit`, `DashboardPage`, and API client. 10/10 end-to-end tests passed.
 
 ---
 
-## Immediate Next Actionable Tasks (Phase 8: Frontend UI/UX Integration)
+## Immediate Next Actionable Tasks (Phase 9: Deployment, Production Hardening & Demo Preparation)
 
-1. **Frontend API Client Configuration**:
-   - Create Axios / Fetch API client in `frontend/src/services/recommendationService.js` to call:
-     - `GET /api/recommendations/crops`
-     - `GET /api/recommendations/countries`
-     - `POST /api/recommendations`
-2. **Farmer Assessment Wizard Integration**:
-   - Connect country selector, crop selector, and water regime toggles to the recommendation endpoint.
-3. **Interactive Recommendation Dashboard**:
-   - Render the three comparison cards (Economic Return, Soil Restoration, Water Resilience).
-   - Display score breakdowns, yield potential benchmarks, and explainable transition rationale.
-   - Display NASA POWER climate indicators and transparency disclosures.
-4. **End-to-End User Flow Testing**:
-   - Verify complete farmer flow from assessment input to recommendation display.
+1. **Production Environment & Containerization**:
+   - Verify environment variables for backend (`PORT`, `MONGODB_URI`, `CLIENT_ORIGIN`) and frontend (`VITE_API_BASE_URL`).
+   - Create Dockerfile / docker-compose configurations if requested.
+2. **Interactive Visualizations (NASA Earth & Climate Layers)**:
+   - Add chart visualizers for NASA POWER annual precipitation cycle vs monthly temperature distributions.
+   - Add Leaflet / interactive globe map showing the farm location and regional archetype boundaries.
+3. **NASA Space Apps Challenge 2026 Submission Deck & Demo Script**:
+   - Prepare presentation slides highlighting use of NASA POWER agro-meteorology and FAO GAEZ v5 crop modeling.
+   - Record demonstration flow demonstrating Pakistan Indus Basin vs Egypt Nile Delta vs US Corn Belt transitions.
