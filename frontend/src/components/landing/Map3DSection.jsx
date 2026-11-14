@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { MountainIcon, CompassIcon, LayersIcon, MapPinIcon } from '../common/Icons';
 
-// Comprehensive preset list of agricultural & major centers (including major Pakistan agricultural cities)
+// Comprehensive preset list of agricultural & major centers
 const PRESET_LOCATIONS = [
   {
     name: 'Lahore',
@@ -118,7 +118,6 @@ export default function Map3DSection({ mapConfig }) {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  // Filter presets or query Nominatim
   const handleSearchChange = async (e) => {
     const val = e.target.value;
     setSearchQuery(val);
@@ -131,7 +130,7 @@ export default function Map3DSection({ mapConfig }) {
 
     setSearchDropdownOpen(true);
 
-    // 1. First search local presets
+    // 1. Search local presets first for instant matching
     const localMatches = PRESET_LOCATIONS.filter(
       (loc) =>
         loc.name.toLowerCase().includes(val.toLowerCase()) ||
@@ -144,10 +143,9 @@ export default function Map3DSection({ mapConfig }) {
       crops: loc.crops,
     }));
 
-    // If local match found, show immediately
     setSearchResults(localMatches);
 
-    // 2. Query Nominatim for global cities/places
+    // 2. Query Nominatim for global cities
     try {
       setIsSearching(true);
       const res = await fetch(
@@ -165,7 +163,6 @@ export default function Map3DSection({ mapConfig }) {
           crops: ['Custom Agricultural Zone'],
         }));
 
-        // Merge without duplicate coordinates
         const combined = [...localMatches];
         apiResults.forEach((apiItem) => {
           const exists = combined.some(
@@ -194,14 +191,13 @@ export default function Map3DSection({ mapConfig }) {
     if (mapInstanceRef.current) {
       mapInstanceRef.current.flyTo({
         center: loc.coordinates,
-        zoom: 11.5,
-        pitch: 62,
+        zoom: 11,
+        pitch: 60,
         bearing: -15,
         essential: true,
         duration: 2200,
       });
 
-      // Update or drop dynamic pin
       dropPinAt(loc.coordinates, loc.name, loc.description || loc.displayName);
     }
   };
@@ -225,7 +221,7 @@ export default function Map3DSection({ mapConfig }) {
 
     const popup = new window.maplibregl.Popup({ offset: 25 }).setHTML(`
       <div style="font-family: 'Inter', sans-serif;">
-        <div style="font-size: 15px; font-weight: 700; color: #173D2A; margin-bottom: 2px;">
+        <div style="font-size: 14px; font-weight: 700; color: #173D2A; margin-bottom: 2px;">
           ${title}
         </div>
         <div style="font-size: 12px; color: #4b5563; line-height: 1.4; margin-bottom: 4px;">
@@ -257,7 +253,6 @@ export default function Map3DSection({ mapConfig }) {
       if (!mapContainerRef.current) return;
 
       try {
-        // High-resolution Satellite Base Layer + Official World Boundaries & City Place Labels Layer
         map = new window.maplibregl.Map({
           container: mapContainerRef.current,
           style: {
@@ -313,32 +308,30 @@ export default function Map3DSection({ mapConfig }) {
               'fog-ground-blend': 0.5,
             },
           },
-          center: [74.3587, 31.5204], // Initialized on Lahore / Indus Basin
+          center: [74.3587, 31.5204],
           zoom: 10,
-          pitch: 62,
+          pitch: 60,
           bearing: -20,
           maxPitch: 85,
         });
 
-        // Add 3D Navigation & Zoom controls
+        // Add navigation controls (zoom, compass) positioned top-right with no overlap
         map.addControl(new window.maplibregl.NavigationControl({ visualizePitch: true }), 'top-right');
-        map.addControl(new window.maplibregl.ScaleControl(), 'bottom-left');
+        map.addControl(new window.maplibregl.ScaleControl(), 'bottom-right');
 
         map.on('load', () => {
-          // Enable actual 3D terrain elevation relief
           try {
             map.setTerrain({ source: 'terrain-source', exaggeration: 1.6 });
           } catch (terrainErr) {
             console.warn('3D Terrain relief notice:', terrainErr);
           }
 
-          // Add preset agricultural markers
           PRESET_LOCATIONS.forEach((loc) => {
             const el = document.createElement('div');
             el.className =
-              'w-8 h-8 rounded-full bg-[#245B3C] border-2 border-white shadow-lg flex items-center justify-center text-white cursor-pointer hover:scale-125 transition-transform duration-200';
+              'w-7 h-7 rounded-full bg-[#245B3C] border-2 border-white shadow-md flex items-center justify-center text-white cursor-pointer hover:scale-125 transition-transform duration-200';
             el.innerHTML = `
-              <svg class="w-4 h-4 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <svg class="w-3.5 h-3.5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
                 <path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"/>
               </svg>
             `;
@@ -348,14 +341,14 @@ export default function Map3DSection({ mapConfig }) {
                 <div style="font-size: 11px; font-weight: 700; color: #245B3C; text-transform: uppercase; margin-bottom: 2px;">
                   ${loc.region}
                 </div>
-                <div style="font-size: 14px; font-weight: 700; color: #173D2A; margin-bottom: 4px;">
+                <div style="font-size: 13px; font-weight: 700; color: #173D2A; margin-bottom: 3px;">
                   ${loc.name}
                 </div>
-                <div style="font-size: 12px; color: #4b5563; line-height: 1.4; margin-bottom: 6px;">
+                <div style="font-size: 11px; color: #4b5563; line-height: 1.35; margin-bottom: 4px;">
                   ${loc.description}
                 </div>
                 <div style="font-size: 11px; color: #245B3C; font-weight: 600;">
-                  Key Crops: ${loc.crops.join(', ')}
+                  Crops: ${loc.crops.join(', ')}
                 </div>
               </div>
             `);
@@ -370,7 +363,6 @@ export default function Map3DSection({ mapConfig }) {
             });
           });
 
-          // Allow user to click ANYWHERE on the map to inspect location
           map.on('click', async (e) => {
             const { lng, lat } = e.lngLat;
             let placeName = 'Selected Agricultural Site';
@@ -392,9 +384,7 @@ export default function Map3DSection({ mapConfig }) {
                   'Custom Location';
                 detail = data.display_name;
               }
-            } catch (err) {
-              // fallback
-            }
+            } catch (err) {}
 
             dropPinAt([lng, lat], placeName, detail);
           });
@@ -424,7 +414,7 @@ export default function Map3DSection({ mapConfig }) {
       mapInstanceRef.current.flyTo({
         center: activeLocation.coordinates,
         zoom: 10,
-        pitch: 62,
+        pitch: 60,
         bearing: -20,
         essential: true,
         duration: 1800,
@@ -455,28 +445,34 @@ export default function Map3DSection({ mapConfig }) {
   };
 
   return (
-    <section id="explore-land" className="py-20 md:py-28 bg-[#F8FAF7] relative">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Section Heading */}
-        <div className="text-center max-w-3xl mx-auto mb-10 md:mb-14">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#EAF2E9] text-xs font-semibold tracking-wider text-[#245B3C] uppercase mb-4">
-            <MountainIcon className="w-4 h-4 text-[#245B3C]" />
+    <section id="explore-land" className="scroll-mt-24 py-12 sm:py-16 md:py-20 bg-[#F8FAF7] relative overflow-hidden">
+      {/* Subtle ambient light glow */}
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[350px] bg-emerald-500/5 rounded-full blur-3xl pointer-events-none -z-10" />
+
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+        {/* Section Header */}
+        <div className="text-center max-w-2xl mx-auto mb-8 sm:mb-10">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#EAF2E9] text-xs font-semibold tracking-wider text-[#245B3C] uppercase mb-3 shadow-2xs">
+            <MountainIcon className="w-3.5 h-3.5 text-[#245B3C]" />
             Geographical Intelligence
           </div>
-          <h2 className="text-3xl sm:text-4xl md:text-5xl font-extrabold text-[#173D2A] tracking-tight mb-4 font-['Plus_Jakarta_Sans']">
+          <h2 className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-[#173D2A] tracking-tight mb-3 font-['Plus_Jakarta_Sans']">
             Explore Agriculture Through a New Perspective
           </h2>
-          <p className="text-base sm:text-lg text-[#202820]/75 leading-relaxed">
+          <p className="text-sm sm:text-base text-[#202820]/75 leading-relaxed">
             Search any city, district, or farmland across Pakistan and the globe. Visualize real terrain elevations, city labels, and agro-climatic zones in high-resolution 3D.
           </p>
         </div>
 
-        {/* Map Container with Modern SaaS Card Shell */}
-        <div className="relative rounded-3xl shadow-[0_25px_60px_-15px_rgba(23,61,42,0.15)] border border-emerald-900/10 bg-white">
-          {/* Top Bar with Live Search & Map Controls (High z-index to stay above WebGL canvas) */}
-          <div className="relative z-40 p-4 sm:px-6 sm:py-3.5 bg-white/98 backdrop-blur-md rounded-t-3xl border-b border-emerald-900/10 flex flex-wrap items-center justify-between gap-3">
-            {/* Live Search Input for ANY city/location */}
-            <div ref={searchContainerRef} className="relative z-50 flex-1 min-w-[280px] max-w-md">
+        {/* Clean, Non-Overlapping Structured Map Frame */}
+        <div className="relative rounded-3xl shadow-[0_20px_50px_-10px_rgba(23,61,42,0.18)] border border-emerald-900/15 bg-white">
+          {/* Top Control Bar: Dedicated Header Row (No Corner Clipping, No Zoom Control Overlap) */}
+          <div className="relative z-40 px-4 sm:px-6 py-3 bg-white border-b border-emerald-900/10 rounded-t-3xl flex flex-wrap items-center justify-between gap-3">
+            {/* Live Search Input with Proper Margin & Dedicated Autocomplete Container */}
+            <div
+              ref={searchContainerRef}
+              className="relative flex-1 min-w-[240px] max-w-md"
+            >
               <div className="relative flex items-center">
                 <input
                   type="text"
@@ -485,8 +481,8 @@ export default function Map3DSection({ mapConfig }) {
                   onFocus={() => {
                     if (searchQuery.trim().length >= 2) setSearchDropdownOpen(true);
                   }}
-                  placeholder="Search any location (e.g. Lahore, Faisalabad, Multan, Karachi...)"
-                  className="w-full pl-10 pr-4 py-2 bg-emerald-50/50 hover:bg-emerald-50 focus:bg-white text-xs sm:text-sm text-[#173D2A] placeholder-[#202820]/50 rounded-xl border border-emerald-900/15 focus:outline-none focus:ring-2 focus:ring-[#245B3C]/30 focus:border-[#245B3C] transition-all"
+                  placeholder="Search city, town, or farmland..."
+                  className="w-full pl-9 pr-8 py-2 bg-emerald-50/50 hover:bg-emerald-50/80 focus:bg-white text-xs sm:text-sm text-[#173D2A] placeholder-[#202820]/50 rounded-xl border border-emerald-900/15 focus:outline-none focus:ring-2 focus:ring-[#245B3C]/30 focus:border-[#245B3C] transition-all"
                 />
                 <div className="absolute left-3 text-[#245B3C] pointer-events-none">
                   <MapPinIcon className="w-4 h-4" />
@@ -496,11 +492,11 @@ export default function Map3DSection({ mapConfig }) {
                 )}
               </div>
 
-              {/* Autocomplete Dropdown - guaranteed above map canvas with high z-index and elevation */}
+              {/* Autocomplete Dropdown - Floats cleanly over the map canvas with high z-index */}
               {searchDropdownOpen && searchResults.length > 0 && (
-                <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-2xl shadow-[0_25px_60px_-10px_rgba(23,61,42,0.3)] border border-emerald-900/15 py-2 z-50 max-h-72 overflow-y-auto animate-in fade-in duration-150">
-                  <div className="px-3 py-1 text-[11px] font-bold uppercase tracking-wider text-[#245B3C] border-b border-emerald-900/5">
-                    Select a Location to Explore
+                <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-2xl shadow-[0_25px_50px_-10px_rgba(23,61,42,0.35)] border border-emerald-900/15 py-2 z-50 max-h-60 overflow-y-auto animate-in fade-in duration-150">
+                  <div className="px-3.5 py-1 text-[11px] font-bold uppercase tracking-wider text-[#245B3C] border-b border-emerald-900/5">
+                    Select Location to Explore
                   </div>
                   {searchResults.map((item, idx) => (
                     <button
@@ -510,9 +506,7 @@ export default function Map3DSection({ mapConfig }) {
                     >
                       <MapPinIcon className="w-4 h-4 text-[#245B3C] mt-0.5 shrink-0" />
                       <div>
-                        <div className="text-xs sm:text-sm font-bold text-[#173D2A]">
-                          {item.name}
-                        </div>
+                        <div className="text-xs sm:text-sm font-bold text-[#173D2A]">{item.name}</div>
                         <div className="text-[11px] text-[#202820]/60 line-clamp-1">
                           {item.displayName || item.description}
                         </div>
@@ -523,25 +517,25 @@ export default function Map3DSection({ mapConfig }) {
               )}
             </div>
 
-            {/* Quick Map Action Buttons */}
+            {/* View Mode Buttons (Right Side, with plenty of room) */}
             <div className="flex items-center gap-2">
               <button
                 onClick={toggleCityLabels}
-                className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors cursor-pointer ${
+                className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
                   showLabels
-                    ? 'bg-[#245B3C] text-white shadow-xs'
-                    : 'bg-[#EAF2E9] text-[#245B3C] hover:bg-emerald-100/70'
+                    ? 'bg-[#245B3C] text-white shadow-2xs'
+                    : 'bg-emerald-50 text-[#245B3C] hover:bg-emerald-100/70'
                 }`}
-                title="Toggle city names, roads and regional boundaries"
+                title="Toggle city names and roads"
               >
                 <LayersIcon className="w-3.5 h-3.5" />
-                {showLabels ? 'City Labels: ON' : 'City Labels: OFF'}
+                Labels: {showLabels ? 'ON' : 'OFF'}
               </button>
 
               <button
                 onClick={reset3DView}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#EAF2E9] hover:bg-emerald-100/70 text-[#245B3C] text-xs font-semibold transition-colors cursor-pointer"
-                title="Reset 3D camera to default perspective"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-50 hover:bg-emerald-100/70 text-[#245B3C] text-xs font-semibold transition-colors cursor-pointer"
+                title="Reset 3D camera"
               >
                 <CompassIcon className="w-3.5 h-3.5" />
                 Reset 3D
@@ -549,31 +543,31 @@ export default function Map3DSection({ mapConfig }) {
 
               <button
                 onClick={toggleTerrainRelief}
-                className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors cursor-pointer ${
+                className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
                   is3DActive
-                    ? 'bg-[#245B3C] text-white shadow-xs'
-                    : 'bg-[#EAF2E9] text-[#245B3C] hover:bg-emerald-100/70'
+                    ? 'bg-[#245B3C] text-white shadow-2xs'
+                    : 'bg-emerald-50 text-[#245B3C] hover:bg-emerald-100/70'
                 }`}
-                title="Toggle 3D mountain and valley elevation relief"
+                title="Toggle 3D terrain elevation relief"
               >
                 <MountainIcon className="w-3.5 h-3.5" />
-                {is3DActive ? '3D Relief: ON' : '3D Relief: OFF'}
+                Relief: {is3DActive ? 'ON' : 'OFF'}
               </button>
             </div>
           </div>
 
-          {/* Map Canvas / Fallback Area (z-10 layer with rounded bottom corners) */}
-          <div className="relative z-10 w-full h-[540px] sm:h-[620px] lg:h-[680px] bg-[#173D2A]/5 rounded-b-3xl overflow-hidden">
+          {/* Map Canvas: 100% Unobstructed Middle Viewport */}
+          <div className="relative w-full h-[360px] sm:h-[400px] md:h-[450px] bg-[#173D2A]/10">
             {mapError ? (
               <div className="absolute inset-0 flex flex-col items-center justify-center p-6 text-center bg-emerald-50/40">
-                <div className="w-12 h-12 rounded-2xl bg-white shadow-sm flex items-center justify-center text-[#245B3C] mb-4">
-                  <MountainIcon className="w-6 h-6" />
+                <div className="w-10 h-10 rounded-xl bg-white shadow-xs flex items-center justify-center text-[#245B3C] mb-3">
+                  <MountainIcon className="w-5 h-5" />
                 </div>
-                <h4 className="text-lg font-bold text-[#173D2A] mb-2">3D Map Initialization</h4>
-                <p className="text-sm text-[#202820]/75 max-w-md mb-4 leading-relaxed">{mapError}</p>
+                <h4 className="text-base font-bold text-[#173D2A] mb-1.5">3D Map Initialization</h4>
+                <p className="text-xs text-[#202820]/75 max-w-sm mb-3 leading-relaxed">{mapError}</p>
                 <button
                   onClick={() => window.location.reload()}
-                  className="px-4 py-2 rounded-xl bg-[#245B3C] text-white text-xs font-semibold hover:bg-[#173D2A] transition-colors"
+                  className="px-3.5 py-1.5 rounded-lg bg-[#245B3C] text-white text-xs font-semibold hover:bg-[#173D2A] transition-colors"
                 >
                   Reload 3D Map
                 </button>
@@ -581,35 +575,28 @@ export default function Map3DSection({ mapConfig }) {
             ) : (
               <div ref={mapContainerRef} className="w-full h-full" />
             )}
+          </div>
 
-            {/* Quick Agricultural Location Chips at bottom */}
-            <div className="absolute bottom-4 left-4 right-4 sm:left-6 sm:right-6 max-w-4xl pointer-events-auto">
-              <div className="bg-white/95 backdrop-blur-md rounded-2xl p-3.5 shadow-lg border border-emerald-900/10">
-                <div className="text-xs font-bold uppercase tracking-wider text-[#245B3C] mb-2 flex items-center justify-between">
-                  <div className="flex items-center gap-1.5">
-                    <MapPinIcon className="w-3.5 h-3.5 text-[#245B3C]" />
-                    <span>Quick Select Major Agricultural Hubs & Cities</span>
-                  </div>
-                  <span className="text-[11px] text-[#202820]/60 font-normal hidden sm:inline">
-                    Click anywhere on the map or type in search above
-                  </span>
-                </div>
-                <div className="flex flex-wrap gap-1.5 max-h-24 overflow-y-auto">
-                  {PRESET_LOCATIONS.map((loc) => (
-                    <button
-                      key={loc.name}
-                      onClick={() => handleSelectLocation(loc)}
-                      className={`text-xs px-3 py-1.5 rounded-lg font-medium transition-all duration-150 cursor-pointer ${
-                        activeLocation?.name === loc.name
-                          ? 'bg-[#245B3C] text-white shadow-xs'
-                          : 'bg-[#EAF2E9] text-[#173D2A] hover:bg-emerald-100'
-                      }`}
-                    >
-                      {loc.name}
-                    </button>
-                  ))}
-                </div>
-              </div>
+          {/* Bottom Control Bar: Quick Agricultural Hubs (Clean Dedicated Footer, Zero Overlap) */}
+          <div className="px-4 sm:px-6 py-3 bg-[#F8FAF7] border-t border-emerald-900/10 rounded-b-3xl flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+            <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-[#245B3C] shrink-0">
+              <MapPinIcon className="w-3.5 h-3.5 text-[#245B3C]" />
+              <span>Quick Agricultural Hubs:</span>
+            </div>
+            <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0 scrollbar-none">
+              {PRESET_LOCATIONS.map((loc) => (
+                <button
+                  key={loc.name}
+                  onClick={() => handleSelectLocation(loc)}
+                  className={`text-xs px-2.5 py-1 rounded-lg font-medium whitespace-nowrap transition-all duration-150 cursor-pointer ${
+                    activeLocation?.name === loc.name
+                      ? 'bg-[#245B3C] text-white shadow-2xs'
+                      : 'bg-white text-[#173D2A] hover:bg-emerald-100/70 border border-emerald-900/10'
+                  }`}
+                >
+                  {loc.name}
+                </button>
+              ))}
             </div>
           </div>
         </div>
