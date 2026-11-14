@@ -1,6 +1,7 @@
 /**
- * AgriShift — API Client Service
- * Connects frontend components to backend REST endpoints with robust fallback support.
+ * AgriShift — Centralized API Client Service
+ * Owner: Talha (Frontend Foundation & Technical Lead)
+ * Used by: Shahzaman (Assessment Wizard), Faiza (Recommendation Dashboard), Anaya (Transparency)
  */
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api';
@@ -25,17 +26,18 @@ async function handleResponse(response) {
 }
 
 /**
- * Fetch complete landing page structured data
- * GET /api/landing
+ * -----------------------------------------------------------------------------
+ * 1. LANDING & MAP APIS (Shared / Landing)
+ * -----------------------------------------------------------------------------
  */
+
 export async function fetchLandingContent() {
   try {
     const res = await fetch(`${API_BASE_URL}/landing`);
     const result = await handleResponse(res);
     return result.data;
   } catch (err) {
-    console.warn('API landing request failed, using structured client fallback:', err.message);
-    // Reliable client-side fallback
+    console.warn('API landing request fallback:', err.message);
     return {
       platform: {
         name: 'AgriShift',
@@ -51,53 +53,28 @@ export async function fetchLandingContent() {
         supportingLine: 'Data-driven insights for sustainable agriculture.',
         heroImage: {
           url: 'https://images.unsplash.com/photo-1500382017468-9049fed747ef?auto=format&fit=crop&w=1600&q=80',
-          alt: 'Aerial panoramic view of fertile green agricultural farmland and modern crop plantations',
+          alt: 'Fertile farmland',
         },
       },
       howItWorks: {
         heading: 'From Farm Data to Smarter Decisions',
         subheading: 'A transparent three-step pipeline bridging Earth observation data with actionable agronomy.',
-        steps: [
-          {
-            stepNumber: 1,
-            title: 'Explore Your Land',
-            description: 'Understand geographical and environmental conditions.',
-            icon: 'map-pin',
-          },
-          {
-            stepNumber: 2,
-            title: 'AI-Powered Analysis',
-            description: 'Analyze agricultural information through machine learning.',
-            icon: 'cpu',
-          },
-          {
-            stepNumber: 3,
-            title: 'Get Crop Recommendations',
-            description: 'Discover suitable agricultural opportunities.',
-            icon: 'sprout',
-          },
-        ],
       },
       ctaSection: {
         heading: 'Ready to Make Smarter Farming Decisions?',
-        description: 'Connect real-world agricultural conditions with climate-aware intelligence.',
         buttonText: 'Start Your Prediction',
       },
     };
   }
 }
 
-/**
- * Fetch crop showcase cards
- * GET /api/crops
- */
 export async function fetchCropsShowcase() {
   try {
     const res = await fetch(`${API_BASE_URL}/crops`);
     const result = await handleResponse(res);
     return result.data || [];
   } catch (err) {
-    console.warn('API crops showcase failed, using verified catalog fallback:', err.message);
+    console.warn('API crops showcase fallback:', err.message);
     return [
       {
         cropId: 'rice',
@@ -135,7 +112,7 @@ export async function fetchCropsShowcase() {
         cropId: 'sugarcane',
         name: 'Sugarcane',
         scientificName: 'Saccharum officinarum',
-        category: 'Perennial Sucrose & Biomass Crop',
+        category: 'Perennial Sucrose Crop',
         description: 'Robust perennial grass with massive sucrose accumulation and renewable biofuel potential.',
         imageUrl: 'https://images.unsplash.com/photo-1596706059298-25f0a3e9c606?auto=format&fit=crop&w=1200&q=80',
       },
@@ -143,55 +120,97 @@ export async function fetchCropsShowcase() {
   }
 }
 
-/**
- * Fetch 3D map configuration and markers
- * GET /api/map/config
- */
 export async function fetchMapConfig() {
   try {
     const res = await fetch(`${API_BASE_URL}/map/config`);
     const result = await handleResponse(res);
     return result.data;
   } catch (err) {
-    console.warn('API map config failed, using default client configuration:', err.message);
+    console.warn('API map config fallback:', err.message);
     return {
       initialView: {
         center: [74.3587, 31.5204],
-        zoom: 10.5,
+        zoom: 10,
         pitch: 62,
-        bearing: -24,
+        bearing: -20,
       },
-      markers: [
-        {
-          id: 'indus_basin',
-          title: 'Indus Basin Agricultural Plains',
-          region: 'Punjab, Pakistan',
-          coordinates: [74.3587, 31.5204],
-          crops: ['Wheat', 'Rice', 'Sugarcane', 'Cotton'],
-          elevationMeters: 217,
-          description: 'World’s largest contiguous canal irrigation network feeding fertile alluvial croplands.',
-        },
-        {
-          id: 'nile_delta',
-          title: 'Nile Delta Cropland Belt',
-          region: 'Lower Egypt',
-          coordinates: [31.5085, 30.5852],
-          crops: ['Cotton', 'Rice', 'Wheat', 'Maize'],
-          elevationMeters: 14,
-          description: 'Centuries of silt-rich river deposition sustaining intensive agricultural cycles.',
-        },
-        {
-          id: 'corn_belt',
-          title: 'Midwestern Corn Belt',
-          region: 'Iowa, United States',
-          coordinates: [-93.6208, 41.5868],
-          crops: ['Maize', 'Soybean'],
-          elevationMeters: 290,
-          description: 'Prime agricultural mollisols supporting high-yield mechanized grain farming.',
-        },
-      ],
     };
   }
+}
+
+/**
+ * -----------------------------------------------------------------------------
+ * 2. ASSESSMENT DATA APIS (Shahzaman's Feature: Farmer Assessment Wizard)
+ * -----------------------------------------------------------------------------
+ */
+
+/**
+ * Fetch available sovereign countries from GAEZ v5 dataset
+ * GET /api/recommendations/countries
+ */
+export async function fetchCountries() {
+  try {
+    const res = await fetch(`${API_BASE_URL}/recommendations/countries`);
+    const result = await handleResponse(res);
+    return result.data || [];
+  } catch (err) {
+    console.warn('API fetchCountries fallback:', err.message);
+    return [
+      { iso3: 'PAK', name: 'Pakistan' },
+      { iso3: 'IND', name: 'India' },
+      { iso3: 'EGY', name: 'Egypt' },
+      { iso3: 'USA', name: 'United States' },
+      { iso3: 'KEN', name: 'Kenya' },
+      { iso3: 'BRA', name: 'Brazil' },
+    ];
+  }
+}
+
+/**
+ * Fetch 8 rotation crops catalog with agronomic metadata
+ * GET /api/recommendations/crops
+ */
+export async function fetchCropsCatalog() {
+  try {
+    const res = await fetch(`${API_BASE_URL}/recommendations/crops`);
+    const result = await handleResponse(res);
+    return result.data || [];
+  } catch (err) {
+    console.warn('API fetchCropsCatalog fallback:', err.message);
+    return [
+      { cropId: 'wheat', displayName: 'Wheat', scientificName: 'Triticum aestivum', category: 'Cereal / Rabi Grain' },
+      { cropId: 'rice', displayName: 'Rice', scientificName: 'Oryza sativa', category: 'Cereal / Kharif Grain' },
+      { cropId: 'maize', displayName: 'Maize (Corn)', scientificName: 'Zea mays', category: 'C4 Cereal / Summer Grain' },
+      { cropId: 'cotton', displayName: 'Cotton', scientificName: 'Gossypium hirsutum', category: 'Cash / Fiber Crop' },
+      { cropId: 'sugarcane', displayName: 'Sugarcane', scientificName: 'Saccharum officinarum', category: 'Cash / High Water Demand' },
+      { cropId: 'soybean', displayName: 'Soybean', scientificName: 'Glycine max', category: 'Legume / Oilseed' },
+      { cropId: 'sorghum', displayName: 'Sorghum', scientificName: 'Sorghum bicolor', category: 'C4 Cereal / Coarse Grain' },
+      { cropId: 'potato', displayName: 'Potato', scientificName: 'Solanum tuberosum', category: 'Root & Tuber' },
+    ];
+  }
+}
+
+/**
+ * -----------------------------------------------------------------------------
+ * 3. RECOMMENDATION ENGINE API (Faiza's Feature: Dashboard & Visualization)
+ * -----------------------------------------------------------------------------
+ */
+
+/**
+ * Submit farmer assessment and get 3 explainable rotation pathways
+ * POST /api/recommendations
+ * @param {Object} payload { country: 'PAK', currentCrop: 'wheat', waterRegime: 'irrigated', managementLevel: 'high' }
+ */
+export async function getRecommendations(payload) {
+  const res = await fetch(`${API_BASE_URL}/recommendations`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(payload),
+  });
+  const result = await handleResponse(res);
+  return result.data;
 }
 
 /**
