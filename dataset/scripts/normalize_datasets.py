@@ -94,6 +94,17 @@ FIELD_METADATA = {
     'yield_very_marginally_suitable_kg_per_ha': {'source_col': 'Y_vmS_', 'unit': 'kg/ha', 'type': 'float'}
 }
 
+AREA_SOURCE_COLUMNS = {
+    'EXTENTS', 'SUIT_VS', 'SUIT_S', 'SUIT_MS', 'SUIT_mS_', 'SUIT_vmS_', 'SUIT_NS'
+}
+
+def km2_to_1000ha(value):
+    return None if value is None else value * 0.1
+
+def solar_mj_to_kwh_series(values):
+    return {period: None if value is None else value / 3.6
+            for period, value in values.items()}
+
 def parse_float_or_null(val_str):
     if val_str is None or val_str.strip() == '':
         return None
@@ -159,6 +170,8 @@ def normalize_gaez_datasets():
                 for norm_key, meta in FIELD_METADATA.items():
                     raw_val = row.get(meta['source_col'], '')
                     parsed_val = parse_float_or_null(raw_val)
+                    if meta['source_col'] in AREA_SOURCE_COLUMNS:
+                        parsed_val = km2_to_1000ha(parsed_val)
                     rec['agronomics'][norm_key] = parsed_val
                     
                 normalized_records.append(rec)
@@ -241,6 +254,7 @@ def normalize_nasa_power_datasets():
         
         # Determine archetype from filename
         archetype = fname.replace('nasa_power_climatology_', '').replace('.json', '')
+        solar_kwh = solar_mj_to_kwh_series(params.get('ALLSKY_SFC_SW_DWN', {}))
         
         profile = {
             'provenance': {
@@ -260,7 +274,7 @@ def normalize_nasa_power_datasets():
                 'temperature_max_c': params.get('T2M_MAX', {}),
                 'temperature_min_c': params.get('T2M_MIN', {}),
                 'precipitation_corrected_mm_day': params.get('PRECTOTCORR', {}),
-                'solar_radiation_surface_downward_kwh_m2_day': params.get('ALLSKY_SFC_SW_DWN', {}),
+                'solar_radiation_surface_downward_kwh_m2_day': solar_kwh,
                 'relative_humidity_2m_percent': params.get('RH2M', {})
             },
             'annual_summary': {
@@ -269,7 +283,7 @@ def normalize_nasa_power_datasets():
                 'min_temperature_c': params.get('T2M_MIN', {}).get('ANN'),
                 'mean_precipitation_mm_day': params.get('PRECTOTCORR', {}).get('ANN'),
                 'annual_precipitation_estimate_mm_year': round(params.get('PRECTOTCORR', {}).get('ANN', 0) * 365.25, 1) if params.get('PRECTOTCORR', {}).get('ANN') else None,
-                'mean_solar_radiation_kwh_m2_day': params.get('ALLSKY_SFC_SW_DWN', {}).get('ANN'),
+                'mean_solar_radiation_kwh_m2_day': solar_kwh.get('ANN'),
                 'mean_relative_humidity_percent': params.get('RH2M', {}).get('ANN')
             }
         }
