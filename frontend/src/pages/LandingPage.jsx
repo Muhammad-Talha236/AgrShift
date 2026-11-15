@@ -1,9 +1,11 @@
 import React, { useEffect, useState } from 'react';
+import Navbar from '../components/layout/Navbar';
 import HeroSection from '../components/landing/HeroSection';
 import Map3DSection from '../components/landing/Map3DSection';
 import CropShowcaseSection from '../components/landing/CropShowcaseSection';
 import HowItWorksSection from '../components/landing/HowItWorksSection';
 import CtaSection from '../components/landing/CtaSection';
+import Footer from '../components/layout/Footer';
 import { fetchLandingContent, fetchCropsShowcase, fetchMapConfig } from '../services/api';
 
 export default function LandingPage({ onNavigate }) {
@@ -44,20 +46,23 @@ export default function LandingPage({ onNavigate }) {
     };
   }, []);
 
-  const handleStartAssessment = () => {
+  const handleStartPrediction = () => {
     if (onNavigate) {
-      onNavigate('assessment');
+      onNavigate('prediction');
     } else {
-      window.location.hash = '#assessment';
+      window.location.hash = '#prediction';
     }
   };
 
   return (
-    <div className="w-full">
+    <div className="min-h-screen bg-[#F8FAF7] text-[#202820] font-sans flex flex-col selection:bg-[#EAF2E9] selection:text-[#173D2A]">
+      {/* Floating Modern SaaS Navbar */}
+      <Navbar onNavigate={onNavigate} activePage="home" />
+
       {/* Hero Section */}
       <HeroSection
         content={landingData?.hero}
-        onExplorePredictions={handleStartAssessment}
+        onExplorePredictions={handleStartPrediction}
       />
 
       {/* Interactive 3D Land Map Section */}
@@ -70,7 +75,10 @@ export default function LandingPage({ onNavigate }) {
       <HowItWorksSection data={landingData?.howItWorks} />
 
       {/* Final Call-to-Action */}
-      <CtaSection onStartPrediction={handleStartAssessment} />
+      <CtaSection onStartPrediction={handleStartPrediction} />
+
+      {/* Minimal SaaS Footer */}
+      <Footer onNavigate={onNavigate} />
     </div>
   );
 }

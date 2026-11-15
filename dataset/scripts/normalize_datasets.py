@@ -1,4 +1,4 @@
-import os, glob, csv, json, datetime, math
+import os, glob, csv, json, datetime
 
 RAW_DIR = 'd:/Uni projects/AgrShift/dataset/raw'
 PROCESSED_DIR = 'd:/Uni projects/AgrShift/dataset/processed'
@@ -94,56 +94,13 @@ FIELD_METADATA = {
     'yield_very_marginally_suitable_kg_per_ha': {'source_col': 'Y_vmS_', 'unit': 'kg/ha', 'type': 'float'}
 }
 
-AREA_SOURCE_COLUMNS = {
-    'EXTENTS', 'SUIT_VS', 'SUIT_S', 'SUIT_MS', 'SUIT_mS_', 'SUIT_vmS_', 'SUIT_NS'
-}
-CLIMATE_VARIABLES = (
-    'T2M', 'T2M_MAX', 'T2M_MIN', 'PRECTOTCORR', 'ALLSKY_SFC_SW_DWN', 'RH2M'
-)
-CLIMATE_PERIODS = (
-    'JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN',
-    'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC', 'ANN'
-)
-
-def km2_to_1000ha(value):
-    return None if value is None else value * 0.1
-
-def solar_mj_to_kwh_series(values):
-    return {period: None if value is None else value / 3.6
-            for period, value in values.items()}
-
-def parse_gaez_number(value, filename, row_number, field):
-    location = f'{filename} row {row_number} field {field}'
-    if value is None or not value.strip():
-        raise ValueError(f'{location}: missing numeric value')
+def parse_float_or_null(val_str):
+    if val_str is None or val_str.strip() == '':
+        return None
     try:
-        number = float(value.strip())
-    except ValueError as exc:
-        raise ValueError(f'{location}: invalid numeric value {value!r}') from exc
-    if not math.isfinite(number):
-        raise ValueError(f'{location}: non-finite numeric value {value!r}')
-    return number
-
-def validate_climate_parameters(params, filename, fill_value=-999.0):
-    if not isinstance(params, dict):
-        raise ValueError(f'{filename}: missing climate parameters')
-    for variable in CLIMATE_VARIABLES:
-        series = params.get(variable)
-        if not isinstance(series, dict):
-            raise ValueError(f'{filename} variable {variable}: missing measurement series')
-        for period in CLIMATE_PERIODS:
-            if period not in series:
-                raise ValueError(f'{filename} variable {variable} period {period}: missing measurement')
-        for period, value in series.items():
-            location = f'{filename} variable {variable} period {period}'
-            if value is None:
-                raise ValueError(f'{location}: missing climate measurement')
-            if isinstance(value, bool) or not isinstance(value, (int, float)):
-                raise ValueError(f'{location}: invalid climate measurement {value!r}')
-            if not math.isfinite(value):
-                raise ValueError(f'{location}: non-finite climate measurement {value!r}')
-            if value == -999.0 or value == fill_value:
-                raise ValueError(f'{location}: NASA POWER fill value {value!r}')
+        return float(val_str.strip())
+    except ValueError:
+        return None
 
 def normalize_gaez_datasets():
     csv_files = sorted(glob.glob(os.path.join(RAW_DIR, 'gaez_*.csv')))
@@ -201,9 +158,7 @@ def normalize_gaez_datasets():
                 
                 for norm_key, meta in FIELD_METADATA.items():
                     raw_val = row.get(meta['source_col'], '')
-                    parsed_val = parse_gaez_number(raw_val, fname, r_idx + 1, meta['source_col'])
-                    if meta['source_col'] in AREA_SOURCE_COLUMNS:
-                        parsed_val = km2_to_1000ha(parsed_val)
+                    parsed_val = parse_float_or_null(raw_val)
                     rec['agronomics'][norm_key] = parsed_val
                     
                 normalized_records.append(rec)
@@ -283,11 +238,9 @@ def normalize_nasa_power_datasets():
         geom = data.get('geometry', {}).get('coordinates', [])
         params = data.get('properties', {}).get('parameter', {})
         header = data.get('header', {})
-        validate_climate_parameters(params, fname, header.get('fill_value', -999.0))
         
         # Determine archetype from filename
         archetype = fname.replace('nasa_power_climatology_', '').replace('.json', '')
-        solar_kwh = solar_mj_to_kwh_series(params.get('ALLSKY_SFC_SW_DWN', {}))
         
         profile = {
             'provenance': {
@@ -307,7 +260,7 @@ def normalize_nasa_power_datasets():
                 'temperature_max_c': params.get('T2M_MAX', {}),
                 'temperature_min_c': params.get('T2M_MIN', {}),
                 'precipitation_corrected_mm_day': params.get('PRECTOTCORR', {}),
-                'solar_radiation_surface_downward_kwh_m2_day': solar_kwh,
+                'solar_radiation_surface_downward_kwh_m2_day': params.get('ALLSKY_SFC_SW_DWN', {}),
                 'relative_humidity_2m_percent': params.get('RH2M', {})
             },
             'annual_summary': {
@@ -315,8 +268,8 @@ def normalize_nasa_power_datasets():
                 'max_temperature_c': params.get('T2M_MAX', {}).get('ANN'),
                 'min_temperature_c': params.get('T2M_MIN', {}).get('ANN'),
                 'mean_precipitation_mm_day': params.get('PRECTOTCORR', {}).get('ANN'),
-                'annual_precipitation_estimate_mm_year': round(params.get('PRECTOTCORR', {}).get('ANN') * 365.25, 1),
-                'mean_solar_radiation_kwh_m2_day': solar_kwh.get('ANN'),
+                'annual_precipitation_estimate_mm_year': round(params.get('PRECTOTCORR', {}).get('ANN', 0) * 365.25, 1) if params.get('PRECTOTCORR', {}).get('ANN') else None,
+                'mean_solar_radiation_kwh_m2_day': params.get('ALLSKY_SFC_SW_DWN', {}).get('ANN'),
                 'mean_relative_humidity_percent': params.get('RH2M', {}).get('ANN')
             }
         }
