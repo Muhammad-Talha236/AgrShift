@@ -1,9 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { getRecommendations } from '../../services/api';
+import PageContainer from '../../components/common/PageContainer';
 import LoadingSpinner from '../../components/common/LoadingSpinner';
 import Button from '../../components/common/Button';
 import Badge from '../../components/common/Badge';
-import { LeafIcon, ArrowRightIcon } from '../../components/common/Icons';
+import EmptyState from '../../components/common/EmptyState';
+import Alert from '../../components/common/Alert';
+import { ArrowRightIcon } from '../../components/common/Icons';
 import AssessmentSummaryCard from './AssessmentSummaryCard';
 import PathwayCard from './PathwayCard';
 import PathwayComparison from './PathwayComparison';
@@ -23,17 +26,33 @@ import ProvenanceFooter from './ProvenanceFooter';
  * - Ranked alternatives table
  * - Provenance & disclosures
  */
-export default function RecommendationDashboard({ assessmentPayload, onBackToAssessment, onBackToHome }) {
-  const [data, setData] = useState(null);
-  const [loading, setLoading] = useState(true);
+export default function RecommendationDashboard({
+  recommendationData = null,
+  assessmentPayload = null,
+  onBackToAssessment,
+  onBackToHome,
+  onNavigate,
+}) {
+  const [data, setData] = useState(recommendationData);
+  const [loading, setLoading] = useState(!recommendationData && Boolean(assessmentPayload));
   const [error, setError] = useState(null);
 
+  const handleNavAssessment = onBackToAssessment || (() => onNavigate && onNavigate('assessment'));
+  const handleNavHome = onBackToHome || (() => onNavigate && onNavigate('home'));
+  const handleNavTransparency = () => onNavigate && onNavigate('transparency');
+
+  // Synchronize when external recommendationData changes
   useEffect(() => {
-    if (!assessmentPayload) {
-      setError('No assessment data provided. Please complete the assessment first.');
+    if (recommendationData) {
+      setData(recommendationData);
       setLoading(false);
-      return;
+      setError(null);
     }
+  }, [recommendationData]);
+
+  // Fetch recommendations if payload provided and data not already loaded
+  useEffect(() => {
+    if (recommendationData || !assessmentPayload) return;
 
     let cancelled = false;
 
@@ -57,199 +76,147 @@ export default function RecommendationDashboard({ assessmentPayload, onBackToAss
     }
 
     fetchRecommendations();
-    return () => { cancelled = true; };
-  }, [assessmentPayload]);
+    return () => {
+      cancelled = true;
+    };
+  }, [assessmentPayload, recommendationData]);
+
+  // Empty State: No Assessment Run Yet
+  if (!loading && !data && !error) {
+    return (
+      <PageContainer size="md" className="pt-28 sm:pt-32 pb-16">
+        <EmptyState
+          title="No Recommendations Generated Yet"
+          description="Complete the quick farmer assessment to evaluate your land's agro-ecological suitability and receive 3 personalized rotation pathways."
+          actionLabel="Start Farmer Assessment"
+          onAction={handleNavAssessment}
+        />
+      </PageContainer>
+    );
+  }
 
   // Loading State
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#F8FAF7] flex flex-col">
-        <DashboardHeader onBackToHome={onBackToHome} />
-        <main className="flex-1 flex items-center justify-center">
-          <div className="text-center">
-            <LoadingSpinner size="lg" message="Generating Recommendations..." />
-            <p className="text-xs text-[#202820]/50 mt-4 max-w-md mx-auto">
-              Analyzing GAEZ v5 yield data and NASA POWER climate profiles to build your personalized crop rotation pathways.
-            </p>
-          </div>
-        </main>
-      </div>
+      <PageContainer size="md" className="pt-28 sm:pt-32 pb-16 flex flex-col items-center justify-center min-h-[50vh]">
+        <LoadingSpinner size="lg" message="Generating Explainable Recommendations..." />
+        <p className="text-xs text-[#202820]/60 mt-4 max-w-md mx-auto text-center leading-relaxed">
+          Synthesizing national GAEZ v5 attainable yields and NASA POWER agroclimatological normals into personalized pathways.
+        </p>
+      </PageContainer>
     );
   }
 
   // Error State
   if (error) {
     return (
-      <div className="min-h-screen bg-[#F8FAF7] flex flex-col">
-        <DashboardHeader onBackToHome={onBackToHome} />
-        <main className="flex-1 flex items-center justify-center px-6">
-          <div className="max-w-md text-center">
-            <div className="w-16 h-16 rounded-3xl bg-rose-50 text-rose-500 flex items-center justify-center mx-auto mb-4">
-              <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
-              </svg>
-            </div>
-            <h2 className="text-lg font-bold text-[#173D2A] mb-2">Recommendation Error</h2>
-            <p className="text-sm text-[#202820]/60 mb-6">{error}</p>
-            <div className="flex gap-3 justify-center">
-              {onBackToAssessment && (
-                <Button variant="primary" onClick={onBackToAssessment}>
-                  Retry Assessment
-                </Button>
-              )}
-              <Button variant="outline" onClick={onBackToHome}>
-                Back to Home
-              </Button>
-            </div>
+      <PageContainer size="md" className="pt-28 sm:pt-32 pb-16">
+        <div className="max-w-xl mx-auto text-center">
+          <Alert
+            variant="error"
+            title="Recommendation Engine Error"
+            message={error}
+            className="mb-6 text-left"
+          />
+          <div className="flex gap-4 justify-center">
+            <Button variant="primary" onClick={handleNavAssessment}>
+              Adjust Assessment Parameters
+            </Button>
+            <Button variant="outline" onClick={handleNavHome}>
+              Return to Home
+            </Button>
           </div>
-        </main>
-      </div>
+        </div>
+      </PageContainer>
     );
   }
 
   // No Eligible Crops
   if (data?.status === 'NO_ELIGIBLE_CROPS') {
     return (
-      <div className="min-h-screen bg-[#F8FAF7] flex flex-col">
-        <DashboardHeader onBackToHome={onBackToHome} />
-        <main className="flex-1 flex items-center justify-center px-6">
-          <div className="max-w-md text-center">
-            <div className="w-16 h-16 rounded-3xl bg-amber-50 text-amber-500 flex items-center justify-center mx-auto mb-4">
-              <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
-              </svg>
-            </div>
-            <h2 className="text-lg font-bold text-[#173D2A] mb-2">No Eligible Crops Found</h2>
-            <p className="text-sm text-[#202820]/60 mb-4">{data.message}</p>
-            {data.eligibilityAudit && (
-              <p className="text-xs text-[#202820]/40 mb-6">
-                {data.eligibilityAudit.totalCropsEvaluated} crops evaluated, {data.eligibilityAudit.ineligibleCount} did not meet thresholds.
-              </p>
-            )}
-            <div className="flex gap-3 justify-center">
-              {onBackToAssessment && (
-                <Button variant="primary" onClick={onBackToAssessment}>
-                  Try Different Parameters
-                </Button>
-              )}
-              <Button variant="outline" onClick={onBackToHome}>
-                Back to Home
-              </Button>
-            </div>
-          </div>
-        </main>
-      </div>
+      <PageContainer size="md" className="pt-28 sm:pt-32 pb-16">
+        <div className="max-w-xl mx-auto text-center">
+          <EmptyState
+            title="No Eligible Crops Found"
+            description={data.message || 'No crops met the viability thresholds for this specific country and water regime.'}
+            actionLabel="Try Different Parameters"
+            onAction={handleNavAssessment}
+          />
+          {data.eligibilityAudit && (
+            <p className="text-xs text-[#202820]/50 mt-4">
+              {data.eligibilityAudit.totalCropsEvaluated} crops evaluated, {data.eligibilityAudit.ineligibleCount} did not meet thresholds.
+            </p>
+          )}
+        </div>
+      </PageContainer>
     );
   }
 
   // Success — Full Dashboard
   return (
-    <div className="min-h-screen bg-[#F8FAF7] flex flex-col">
-      <DashboardHeader onBackToHome={onBackToHome} onBackToAssessment={onBackToAssessment} />
-
-      <main className="flex-1 max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8 sm:py-12 pt-24">
-        {/* Page Title */}
-        <div className="mb-8">
-          <div className="flex items-center gap-2 mb-2">
-            <Badge variant="success">AI-POWERED ANALYSIS</Badge>
-            {data?.assessmentSummary?.country?.name && (
-              <Badge variant="neutral">{data.assessmentSummary.country.name}</Badge>
-            )}
-          </div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-[#173D2A] font-['Plus_Jakarta_Sans']">
-            Crop Rotation Recommendations
-          </h1>
-          <p className="text-sm text-[#202820]/60 mt-1">
-            Three explainable pathways tailored to your agro-ecological conditions.
-          </p>
-        </div>
-
-        {/* Assessment Summary */}
-        <div className="mb-8">
-          <AssessmentSummaryCard summary={data.assessmentSummary} />
-        </div>
-
-        {/* Three Pathway Cards */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-          <PathwayCard pathway={data.pathways?.economicReturn} />
-          <PathwayCard pathway={data.pathways?.soilRestoration} />
-          <PathwayCard pathway={data.pathways?.waterResilience} />
-        </div>
-
-        {/* Comparison & Visualizations */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-          <PathwayComparison pathways={data.pathways} />
-          <YieldComparisonChart alternatives={data.rankedAlternatives} />
-        </div>
-
-        {/* Ranked Alternatives */}
-        <div className="mb-8">
-          <RankedAlternativesTable alternatives={data.rankedAlternatives} />
-        </div>
-
-        {/* Provenance */}
-        <div className="mb-8">
-          <ProvenanceFooter provenance={data.provenance} />
-        </div>
-
-        {/* Action Buttons */}
-        <div className="flex flex-wrap gap-3 justify-center pb-8">
-          {onBackToAssessment && (
-            <Button variant="primary" size="lg" onClick={onBackToAssessment}>
-              <span>New Assessment</span>
-              <ArrowRightIcon className="w-4 h-4" />
-            </Button>
+    <PageContainer size="lg" className="pt-28 sm:pt-32 pb-16">
+      {/* Page Title & Breadcrumb Header */}
+      <div className="mb-8">
+        <div className="flex flex-wrap items-center gap-2 mb-2">
+          <Badge variant="success">AI-POWERED RECOMMENDATIONS</Badge>
+          {data?.assessmentSummary?.country?.name && (
+            <Badge variant="neutral">{data.assessmentSummary.country.name}</Badge>
           )}
-          <Button variant="outline" size="lg" onClick={onBackToHome}>
-            Back to Home
-          </Button>
-        </div>
-      </main>
-
-      {/* Footer */}
-      <footer className="py-6 text-center text-xs text-[#202820]/50 border-t border-emerald-900/5">
-        AgriShift &copy; 2026. NASA Space Apps Challenge. Powered by GAEZ v5 &amp; NASA POWER.
-      </footer>
-    </div>
-  );
-}
-
-/**
- * Dashboard Header
- */
-function DashboardHeader({ onBackToHome, onBackToAssessment }) {
-  return (
-    <header className="fixed top-0 left-0 right-0 z-50 py-3 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-7xl mx-auto bg-white/90 backdrop-blur-md shadow-sm border border-emerald-900/5 rounded-2xl px-5 sm:px-6 py-3.5 flex items-center justify-between">
-        <div
-          onClick={onBackToHome}
-          className="flex items-center gap-2.5 cursor-pointer group"
-        >
-          <div className="w-9 h-9 rounded-xl bg-[#245B3C] text-white flex items-center justify-center shadow-sm group-hover:scale-105 transition-transform">
-            <LeafIcon className="w-5 h-5 text-[#EAF2E9]" />
-          </div>
-          <span className="text-xl font-bold tracking-tight text-[#173D2A] font-['Plus_Jakarta_Sans']">
-            AgriShift
-          </span>
-        </div>
-
-        <div className="flex items-center gap-2">
-          {onBackToAssessment && (
-            <button
-              onClick={onBackToAssessment}
-              className="hidden sm:inline-flex px-4 py-2 rounded-xl text-sm font-semibold text-[#245B3C] hover:bg-emerald-50 transition-colors cursor-pointer"
-            >
-              ← Assessment
-            </button>
+          {data?.assessmentSummary?.waterRegime && (
+            <Badge variant="info">
+              {data.assessmentSummary.waterRegime === 'rainfed' ? 'Rainfed Cropland' : 'Irrigated Cropland'}
+            </Badge>
           )}
-          <button
-            onClick={onBackToHome}
-            className="px-4 py-2 rounded-xl text-sm font-semibold text-[#245B3C] hover:bg-emerald-50 transition-colors cursor-pointer"
-          >
-            ← Home
-          </button>
         </div>
+        <h1 className="text-2xl sm:text-4xl font-extrabold text-[#173D2A] font-['Plus_Jakarta_Sans'] tracking-tight">
+          Crop Rotation & Suitability Dashboard
+        </h1>
+        <p className="text-sm sm:text-base text-[#202820]/70 mt-1">
+          Three explainable pathways engineered for optimal economic output, biological soil restoration, and climate water resilience.
+        </p>
       </div>
-    </header>
+
+      {/* Assessment Summary Card */}
+      <div className="mb-8">
+        <AssessmentSummaryCard summary={data.assessmentSummary} />
+      </div>
+
+      {/* Three Strategic Pathway Cards */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+        <PathwayCard pathway={data.pathways?.economicReturn} />
+        <PathwayCard pathway={data.pathways?.soilRestoration} />
+        <PathwayCard pathway={data.pathways?.waterResilience} />
+      </div>
+
+      {/* Comparison & Visualizations */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+        <PathwayComparison pathways={data.pathways} />
+        <YieldComparisonChart alternatives={data.rankedAlternatives} />
+      </div>
+
+      {/* Ranked Alternatives Table */}
+      <div className="mb-8">
+        <RankedAlternativesTable alternatives={data.rankedAlternatives} />
+      </div>
+
+      {/* Provenance & Scientific Disclosures */}
+      <div className="mb-8">
+        <ProvenanceFooter provenance={data.provenance} />
+      </div>
+
+      {/* Navigation Actions */}
+      <div className="flex flex-wrap gap-4 justify-center pt-4">
+        <Button variant="primary" size="lg" onClick={handleNavAssessment}>
+          <span>Run Another Assessment</span>
+          <ArrowRightIcon className="w-4 h-4 ml-1" />
+        </Button>
+        <Button variant="secondary" size="lg" onClick={handleNavTransparency}>
+          Scientific Transparency & Citations
+        </Button>
+        <Button variant="outline" size="lg" onClick={handleNavHome}>
+          Return to Home
+        </Button>
+      </div>
+    </PageContainer>
   );
 }

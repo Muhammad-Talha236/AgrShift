@@ -12,7 +12,7 @@ import { createAssessmentSubmitter } from './assessmentSubmission';
 const STEPS = ['Farm location', 'Farming conditions', 'Review assessment'];
 const INITIAL_VALUES = { country: '', currentCrop: '', waterRegime: '', managementLevel: '' };
 
-export default function AssessmentWizard({ onRecommendationsReady }) {
+export default function AssessmentWizard({ onRecommendationsReady, onNavigate }) {
   const [step, setStep] = useState(0);
   const [values, setValues] = useState(INITIAL_VALUES);
   const [errors, setErrors] = useState({});
@@ -238,13 +238,26 @@ export default function AssessmentWizard({ onRecommendationsReady }) {
               <p className="text-sm text-[#202820]/75 mt-1">Your selections will be sent to the recommendation service. Results will remain here for review.</p>
               {submissionError && <Alert variant="error" title="Could not generate recommendations" message={submissionError} className="mt-4" />}
               {recommendation ? (
-                <div role="status" className="mt-4 space-y-3">
-                  <Alert variant="success" title="Assessment processed" message="The recommendation service returned three pathways." />
-                  <ul className="list-disc pl-5 text-sm text-[#173D2A]">
-                    {['economicReturn', 'soilRestoration', 'waterResilience'].map((key) => (
-                      <li key={key}>{recommendation.pathways[key].strategyTitle}</li>
-                    ))}
+                <div role="status" className="mt-4 space-y-4">
+                  <Alert variant="success" title="Assessment Processed Successfully!" message="The recommendation engine evaluated your land and synthesized three strategic rotation pathways." />
+                  <ul className="list-disc pl-5 text-sm text-[#173D2A] space-y-1">
+                    {['economicReturn', 'soilRestoration', 'waterResilience'].map((key) => {
+                      const pathway = recommendation.pathways[key];
+                      if (!pathway) return null;
+                      return (
+                        <li key={key}>
+                          <span className="font-semibold">{pathway.title || pathway.strategyTitle}:</span>{' '}
+                          {pathway.recommendedCrop?.displayName || 'Recommended Crop'}{' '}
+                          {pathway.recommendedCrop?.compositeScore ? `(Score: ${pathway.recommendedCrop.compositeScore}/100)` : ''}
+                        </li>
+                      );
+                    })}
                   </ul>
+                  {onNavigate && (
+                    <Button variant="primary" size="lg" className="w-full mt-3" onClick={() => onNavigate('recommendation')}>
+                      Open Detailed Recommendation Dashboard &rarr;
+                    </Button>
+                  )}
                 </div>
               ) : (
                 <Button className="mt-4" onClick={submitAssessment} loading={submitting} disabled={!ready}>

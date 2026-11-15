@@ -9,6 +9,7 @@ const VALID_ROUTES = ['home', 'assessment', 'recommendation', 'transparency'];
 
 export default function App() {
   const [currentPage, setCurrentPage] = useState('home');
+  const [recommendationData, setRecommendationData] = useState(null);
 
   useEffect(() => {
     const handleHashChange = () => {
@@ -41,11 +42,25 @@ export default function App() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
+  const handleRecommendationsReady = (data) => {
+    setRecommendationData(data);
+  };
+
   return (
     <AppLayout activePage={currentPage} onNavigate={navigateTo}>
       {currentPage === 'home' && <LandingPage onNavigate={navigateTo} />}
-      {currentPage === 'assessment' && <AssessmentPage onNavigate={navigateTo} />}
-      {currentPage === 'recommendation' && <RecommendationPage onNavigate={navigateTo} />}
+      {currentPage === 'assessment' && (
+        <AssessmentPage
+          onNavigate={navigateTo}
+          onRecommendationsReady={handleRecommendationsReady}
+        />
+      )}
+      {currentPage === 'recommendation' && (
+        <RecommendationPage
+          recommendationData={recommendationData}
+          onNavigate={navigateTo}
+        />
+      )}
       {currentPage === 'transparency' && <TransparencyPage onNavigate={navigateTo} />}
     </AppLayout>
   );

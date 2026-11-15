@@ -64,30 +64,32 @@ assert(
   'AssessmentPage missing or not properly defined'
 );
 
-// 5. Check RecommendationPage.jsx
+// 5. Check RecommendationPage.jsx & RecommendationDashboard.jsx
 const recommendationPath = path.resolve(__dirname, '../../frontend/src/pages/RecommendationPage.jsx');
 const recommendationSrc = fs.existsSync(recommendationPath) ? fs.readFileSync(recommendationPath, 'utf8') : '';
+const recDashboardPath = path.resolve(__dirname, '../../frontend/src/features/recommendations/RecommendationDashboard.jsx');
+const recDashboardSrc = fs.existsSync(recDashboardPath) ? fs.readFileSync(recDashboardPath, 'utf8') : '';
 assert(
   recommendationSrc.includes('export default function RecommendationPage') &&
-  recommendationSrc.includes('PageContainer') &&
-  recommendationSrc.includes('Faiza') &&
-  recommendationSrc.includes('Economic Return Pathway') &&
-  recommendationSrc.includes('Soil Restoration Pathway') &&
-  recommendationSrc.includes('Water Resilience Pathway'),
-  'RecommendationPage.jsx exists with 3 strategic pathways & Faiza ownership badge',
+  recommendationSrc.includes('RecommendationDashboard') &&
+  recDashboardSrc.includes('economicReturn') &&
+  recDashboardSrc.includes('soilRestoration') &&
+  recDashboardSrc.includes('waterResilience'),
+  'RecommendationPage.jsx connects RecommendationDashboard with 3 strategic pathways',
   'RecommendationPage missing or not properly defined'
 );
 
-// 6. Check TransparencyPage.jsx
+// 6. Check TransparencyPage.jsx & TransparencyDashboard.jsx
 const transparencyPath = path.resolve(__dirname, '../../frontend/src/pages/TransparencyPage.jsx');
 const transparencySrc = fs.existsSync(transparencyPath) ? fs.readFileSync(transparencyPath, 'utf8') : '';
+const transDashboardPath = path.resolve(__dirname, '../../frontend/src/features/transparency/TransparencyDashboard.jsx');
+const transDashboardSrc = fs.existsSync(transDashboardPath) ? fs.readFileSync(transDashboardPath, 'utf8') : '';
 assert(
   transparencySrc.includes('export default function TransparencyPage') &&
-  transparencySrc.includes('PageContainer') &&
-  transparencySrc.includes('Anaya') &&
-  transparencySrc.includes('GAEZ v5') &&
-  transparencySrc.includes('NASA POWER'),
-  'TransparencyPage.jsx exists with open-science disclosures & Anaya ownership badge',
+  transparencySrc.includes('TransparencyDashboard') &&
+  transDashboardSrc.includes('ProvenanceSection') &&
+  transDashboardSrc.includes('ScoringModelExplainer'),
+  'TransparencyPage.jsx connects TransparencyDashboard with open-science disclosures',
   'TransparencyPage missing or not properly defined'
 );
 
