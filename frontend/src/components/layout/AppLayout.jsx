@@ -4,7 +4,6 @@ import Footer from './Footer';
 
 /**
  * Shared AppLayout Component
- * Developed by Talha (Frontend Foundation)
  * Wraps all application routes with consistent Navbar, main content viewport, and Footer.
  *
  * @param {React.ReactNode} children - Dynamic page view content

@@ -1,7 +1,6 @@
 /**
  * AgriShift — Centralized API Client Service
- * Owner: Talha (Frontend Foundation & Technical Lead)
- * Used by: Shahzaman (Assessment Wizard), Faiza (Recommendation Dashboard), Anaya (Transparency)
+ * Connects frontend modules with AgriShift REST backend.
  */
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api';
@@ -140,7 +139,7 @@ export async function fetchMapConfig() {
 
 /**
  * -----------------------------------------------------------------------------
- * 2. ASSESSMENT DATA APIS (Shahzaman's Feature: Farmer Assessment Wizard)
+ * 2. ASSESSMENT DATA APIS (Farmer Assessment Wizard)
  * -----------------------------------------------------------------------------
  */
 
@@ -192,7 +191,7 @@ export async function fetchCropsCatalog() {
 
 /**
  * -----------------------------------------------------------------------------
- * 3. RECOMMENDATION ENGINE API (Faiza's Feature: Dashboard & Visualization)
+ * 3. RECOMMENDATION ENGINE API (Dashboard & Visualization)
  * -----------------------------------------------------------------------------
  */
 

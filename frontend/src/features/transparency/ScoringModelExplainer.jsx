@@ -4,7 +4,6 @@ import Badge from '../../components/common/Badge';
 
 /**
  * Composite Scoring Formula Explainer
- * Owner: Anaya (Agricultural Research & Scientific Transparency)
  */
 export default function ScoringModelExplainer() {
   const [sampleYield, setSampleYield] = useState(85);

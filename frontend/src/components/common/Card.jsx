@@ -2,7 +2,6 @@ import React from 'react';
 
 /**
  * Shared Card Container Component
- * Developed by Talha (Frontend Foundation)
  */
 export default function Card({ children, className = '', hoverable = false, ...props }) {
   return (

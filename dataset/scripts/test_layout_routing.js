@@ -59,8 +59,8 @@ const assessmentSrc = fs.existsSync(assessmentPath) ? fs.readFileSync(assessment
 assert(
   assessmentSrc.includes('export default function AssessmentPage') &&
   assessmentSrc.includes('PageContainer') &&
-  assessmentSrc.includes('Shahzaman'),
-  'AssessmentPage.jsx exists with PageContainer & Shahzaman ownership badge',
+  assessmentSrc.includes('AssessmentWizard'),
+  'AssessmentPage.jsx exists with PageContainer & AssessmentWizard integration',
   'AssessmentPage missing or not properly defined'
 );
 

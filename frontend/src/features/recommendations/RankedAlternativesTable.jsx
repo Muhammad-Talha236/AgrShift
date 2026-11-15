@@ -3,7 +3,6 @@ import Card from '../../components/common/Card';
 
 /**
  * Ranked Alternatives Table
- * Owner: Faiza — Recommendation Dashboard
  * Displays all eligible crops ranked by composite score.
  */
 export default function RankedAlternativesTable({ alternatives }) {

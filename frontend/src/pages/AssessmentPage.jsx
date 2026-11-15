@@ -4,7 +4,7 @@ import AssessmentWizard from '../features/assessment/AssessmentWizard';
 
 /**
  * Farmer Assessment Wizard Page
- * Module Owner: Shahzaman (Agricultural Data Engineering & Assessment Wizard)
+ * Global Agricultural Intelligence & Assessment Wizard
  */
 export default function AssessmentPage({ onRecommendationsReady, onNavigate }) {
   return (

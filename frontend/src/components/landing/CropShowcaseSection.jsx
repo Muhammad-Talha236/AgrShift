@@ -41,7 +41,7 @@ export default function CropShowcaseSection({ crops = [] }) {
       scientificName: 'Saccharum officinarum',
       category: 'Perennial Sucrose Crop',
       description: 'Robust perennial grass with massive sucrose accumulation and renewable biofuel potential.',
-      imageUrl: 'https://images.unsplash.com/photo-1596706059298-25f0a3e9c606?auto=format&fit=crop&w=1200&q=80',
+      imageUrl: 'https://media.istockphoto.com/id/1327494053/photo/sugarcane-field-farm-in-india-winter-season-nature.jpg?s=612x612&w=0&k=20&c=ITsqcoo1IVjpNcIjqpfc44hrj5M5etM7_fVUqdTm-gw=',
     },
   ];
 

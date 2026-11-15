@@ -3,7 +3,6 @@ import Card from '../../components/common/Card';
 
 /**
  * Side-by-side Pathway Comparison Chart
- * Owner: Faiza — Recommendation Dashboard
  * Horizontal bar comparison of three pathways.
  */
 

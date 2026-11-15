@@ -2,7 +2,6 @@ import React from 'react';
 
 /**
  * Horizontal Score Breakdown Bar
- * Owner: Faiza — Recommendation Dashboard
  * Shows a labeled horizontal bar with score fill (0-100).
  */
 export default function ScoreBreakdownBar({ label, score, weight, color = '#245B3C', maxScore = 100 }) {

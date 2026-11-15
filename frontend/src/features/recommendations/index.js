@@ -1,8 +1,8 @@
 /**
  * Recommendation Dashboard Feature Module
- * Owner: Faiza — Recommendation Dashboard & Data Visualization
  */
 export { default as RecommendationDashboard } from './RecommendationDashboard';
+export { default as Farm3DLandView } from './Farm3DLandView';
 export { default as PathwayCard } from './PathwayCard';
 export { default as PathwayComparison } from './PathwayComparison';
 export { default as AssessmentSummaryCard } from './AssessmentSummaryCard';

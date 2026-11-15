@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 
 /**
  * Shared Alert Component
- * Developed by Talha (Frontend Foundation)
  * Used for form validation feedback, API errors, system notices, and scientific warnings.
  *
  * @param {'success' | 'warning' | 'error' | 'info'} variant - The alert style variant

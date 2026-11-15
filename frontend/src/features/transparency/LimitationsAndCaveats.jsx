@@ -4,7 +4,6 @@ import Alert from '../../components/common/Alert';
 
 /**
  * Scientific Limitations & Disclosures
- * Owner: Anaya (Agricultural Research & Scientific Transparency)
  */
 export default function LimitationsAndCaveats() {
   const limitations = [

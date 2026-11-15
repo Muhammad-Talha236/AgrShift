@@ -3,7 +3,6 @@ import Card from '../../components/common/Card';
 
 /**
  * Yield Comparison Bar Chart (pure CSS/SVG)
- * Owner: Faiza — Recommendation Dashboard
  * Visual bar chart of attainable yields across ranked alternatives.
  */
 export default function YieldComparisonChart({ alternatives }) {

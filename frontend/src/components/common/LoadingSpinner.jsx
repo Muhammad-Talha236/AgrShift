@@ -2,7 +2,6 @@ import React from 'react';
 
 /**
  * Shared Loading Spinner Component
- * Developed by Talha (Frontend Foundation)
  */
 export default function LoadingSpinner({ message = 'Loading...', size = 'md' }) {
   const sizes = {

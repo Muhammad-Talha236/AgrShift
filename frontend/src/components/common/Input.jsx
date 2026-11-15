@@ -2,7 +2,6 @@ import React from 'react';
 
 /**
  * Shared Input Field Component
- * Developed by Talha (Frontend Foundation)
  */
 export default function Input({
   label,

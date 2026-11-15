@@ -3,7 +3,7 @@ import TransparencyDashboard from '../features/transparency/TransparencyDashboar
 
 /**
  * Scientific Validation & Transparency Page
- * Module Owner: Anaya (Agricultural Research, Scientific Validation & Transparency)
+ * Open Science & Agronomic Data Transparency
  */
 export default function TransparencyPage({ onNavigate }) {
   return <TransparencyDashboard onNavigate={onNavigate} />;

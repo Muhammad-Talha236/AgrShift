@@ -2,7 +2,6 @@ import React from 'react';
 
 /**
  * Circular Score Gauge Component
- * Owner: Faiza — Recommendation Dashboard
  * Renders a circular SVG gauge for composite/sub-scores (0-100).
  */
 export default function ScoreGauge({ score = 0, label = '', size = 100, strokeWidth = 8, color = '#245B3C' }) {

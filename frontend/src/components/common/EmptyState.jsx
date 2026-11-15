@@ -3,7 +3,6 @@ import Button from './Button';
 
 /**
  * Shared EmptyState Component
- * Developed by Talha (Frontend Foundation)
  * Used when no data is returned (e.g. NO_ELIGIBLE_CROPS in Iceland, empty search results, or uninitiated assessment).
  *
  * @param {string} title - Main heading for the empty state

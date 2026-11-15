@@ -3,7 +3,7 @@ import RecommendationDashboard from '../features/recommendations/RecommendationD
 
 /**
  * Recommendation Page
- * Module Owner: Faiza (Recommendation Dashboard & Data Visualization)
+ * Crop Rotation Pathways & Land Landscape View
  * Connects the recommendation feature dashboard into the AgriShift layout and routing.
  */
 export default function RecommendationPage({ recommendationData, onNavigate }) {

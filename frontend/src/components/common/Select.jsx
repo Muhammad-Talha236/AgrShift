@@ -2,7 +2,6 @@ import React from 'react';
 
 /**
  * Shared Select Dropdown Component
- * Developed by Talha (Frontend Foundation)
  */
 export default function Select({
   label,

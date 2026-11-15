@@ -2,7 +2,6 @@ import React from 'react';
 
 /**
  * Shared PageContainer Component
- * Developed by Talha (Frontend Foundation)
  * Provides consistent maximum-width centering, responsive padding, and vertical spacing across all pages.
  *
  * @param {React.ReactNode} children - Page content to render

@@ -4,7 +4,6 @@ import Badge from '../../components/common/Badge';
 
 /**
  * Crop Rotation Agronomy & Biological Principles
- * Owner: Anaya (Agricultural Research & Scientific Transparency)
  */
 export default function CropRotationScience() {
   const principles = [

@@ -2,7 +2,6 @@ import React from 'react';
 
 /**
  * Shared Button Component
- * Developed by Talha (Frontend Foundation)
  */
 export default function Button({
   children,

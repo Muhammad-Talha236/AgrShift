@@ -4,7 +4,6 @@ import Badge from '../../components/common/Badge';
 
 /**
  * Data Sources & Provenance Section
- * Owner: Anaya (Agricultural Research & Scientific Transparency)
  */
 export default function ProvenanceSection() {
   return (

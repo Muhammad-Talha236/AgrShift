@@ -3,7 +3,6 @@ import Card from '../../components/common/Card';
 
 /**
  * Provenance & Data Sources Footer
- * Owner: Faiza — Recommendation Dashboard
  * Shows engine version, data sources, and limitations.
  */
 export default function ProvenanceFooter({ provenance }) {

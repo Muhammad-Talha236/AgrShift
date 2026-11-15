@@ -3,7 +3,6 @@ import Card from '../../components/common/Card';
 
 /**
  * Peer-Reviewed Citations & Official References
- * Owner: Anaya (Agricultural Research & Scientific Transparency)
  */
 export default function AcademicReferences() {
   const references = [

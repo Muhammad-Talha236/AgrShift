@@ -2,7 +2,6 @@ import React from 'react';
 
 /**
  * Shared Status Badge Component
- * Developed by Talha (Frontend Foundation)
  */
 export default function Badge({ children, variant = 'success', className = '' }) {
   const variants = {

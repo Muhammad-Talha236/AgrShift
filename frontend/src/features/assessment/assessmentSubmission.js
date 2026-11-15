@@ -1,10 +1,13 @@
 export function buildRecommendationPayload(values) {
-  return {
+  const payload = {
     country: values.country,
     currentCrop: values.currentCrop,
     waterRegime: values.waterRegime,
     managementLevel: values.managementLevel,
   };
+  if (values.city) payload.city = values.city;
+  if (values.coordinates) payload.coordinates = values.coordinates;
+  return payload;
 }
 
 export function validateRecommendationResponse(result) {

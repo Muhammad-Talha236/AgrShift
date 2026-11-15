@@ -359,6 +359,12 @@ async function generateRecommendations(input) {
         iso3,
         name: countryName,
       },
+      city: input.city ? String(input.city).trim() : null,
+      coordinates: Array.isArray(input.coordinates) && input.coordinates.length === 2
+        ? input.coordinates
+        : (input.coordinates && typeof input.coordinates.lat === 'number' && typeof input.coordinates.lng === 'number')
+          ? [input.coordinates.lat, input.coordinates.lng]
+          : null,
       currentCrop: currentCropDoc
         ? {
             cropId: currentCropDoc.cropId,

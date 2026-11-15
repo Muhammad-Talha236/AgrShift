@@ -7,6 +7,7 @@ import Badge from '../../components/common/Badge';
 import EmptyState from '../../components/common/EmptyState';
 import Alert from '../../components/common/Alert';
 import { ArrowRightIcon } from '../../components/common/Icons';
+import Farm3DLandView from './Farm3DLandView';
 import AssessmentSummaryCard from './AssessmentSummaryCard';
 import PathwayCard from './PathwayCard';
 import PathwayComparison from './PathwayComparison';
@@ -16,15 +17,7 @@ import ProvenanceFooter from './ProvenanceFooter';
 
 /**
  * Recommendation Dashboard Page
- * Owner: Faiza — Recommendation Dashboard & Data Visualization
- *
- * Consumes the recommendation API response and renders:
- * - Assessment summary
- * - Three pathway cards (Economic Return, Soil Restoration, Water Resilience)
- * - Pathway comparison chart
- * - Yield visualization
- * - Ranked alternatives table
- * - Provenance & disclosures
+ * Interactive 3D Farm Land View, Crop Imagery, and Clear Plain-English Verdicts.
  */
 export default function RecommendationDashboard({
   recommendationData = null,
@@ -99,9 +92,12 @@ export default function RecommendationDashboard({
   if (loading) {
     return (
       <PageContainer size="md" className="pt-28 sm:pt-32 pb-16 flex flex-col items-center justify-center min-h-[50vh]">
-        <LoadingSpinner size="lg" message="Generating Explainable Recommendations..." />
-        <p className="text-xs text-[#202820]/60 mt-4 max-w-md mx-auto text-center leading-relaxed">
-          Synthesizing national GAEZ v5 attainable yields and NASA POWER agroclimatological normals into personalized pathways.
+        <div className="w-16 h-16 rounded-3xl bg-[#EAF2E9] text-[#245B3C] flex items-center justify-center mx-auto mb-6 shadow-sm animate-pulse">
+          <span className="text-2xl">🌱</span>
+        </div>
+        <LoadingSpinner size="lg" message="Generating Crop Recommendations..." />
+        <p className="text-xs text-[#202820]/65 mt-4 max-w-md mx-auto text-center leading-relaxed">
+          Cross-referencing FAO GAEZ v5 national attainable yields with NASA POWER 30-year agroclimatological satellite observations.
         </p>
       </PageContainer>
     );
@@ -114,7 +110,7 @@ export default function RecommendationDashboard({
         <div className="max-w-xl mx-auto text-center">
           <Alert
             variant="error"
-            title="Recommendation Engine Error"
+            title="Recommendation Engine Notice"
             message={error}
             className="mb-6 text-left"
           />
@@ -152,66 +148,91 @@ export default function RecommendationDashboard({
     );
   }
 
-  // Success — Full Dashboard
+  const summary = data.assessmentSummary || {};
+  const cityName = summary.city || '';
+  const countryName = summary.country?.name || 'Your Country';
+  const locationTitle = cityName ? `${cityName}, ${countryName}` : countryName;
+  const coordinates = summary.coordinates || null;
+
   return (
-    <PageContainer size="lg" className="pt-28 sm:pt-32 pb-16">
-      {/* Page Title & Breadcrumb Header */}
-      <div className="mb-8">
+    <PageContainer size="lg" className="pt-28 sm:pt-32 pb-16 space-y-8">
+      {/* Page Header */}
+      <div>
         <div className="flex flex-wrap items-center gap-2 mb-2">
           <Badge variant="success">AI-POWERED RECOMMENDATIONS</Badge>
-          {data?.assessmentSummary?.country?.name && (
-            <Badge variant="neutral">{data.assessmentSummary.country.name}</Badge>
-          )}
-          {data?.assessmentSummary?.waterRegime && (
+          <Badge variant="neutral">📍 {locationTitle}</Badge>
+          {summary.waterRegime && (
             <Badge variant="info">
-              {data.assessmentSummary.waterRegime === 'rainfed' ? 'Rainfed Cropland' : 'Irrigated Cropland'}
+              {summary.waterRegime === 'rainfed' ? 'Rainfed Cropland' : 'Irrigated Cropland'}
             </Badge>
           )}
         </div>
         <h1 className="text-2xl sm:text-4xl font-extrabold text-[#173D2A] font-['Plus_Jakarta_Sans'] tracking-tight">
-          Crop Rotation & Suitability Dashboard
+          Recommended Crop Rotation Pathways
         </h1>
-        <p className="text-sm sm:text-base text-[#202820]/70 mt-1">
-          Three explainable pathways engineered for optimal economic output, biological soil restoration, and climate water resilience.
+        <p className="text-sm sm:text-base text-[#202820]/75 mt-1 max-w-3xl">
+          Three clear, field-ready crop rotation choices evaluated specifically for your farm in <strong>{locationTitle}</strong>.
         </p>
       </div>
 
-      {/* Assessment Summary Card */}
-      <div className="mb-8">
-        <AssessmentSummaryCard summary={data.assessmentSummary} />
+      {/* 3D Farm Landscape & Seasonal Rotation Simulator */}
+      <div>
+        <Farm3DLandView
+          city={cityName}
+          countryName={countryName}
+          coordinates={coordinates}
+        />
       </div>
 
-      {/* Three Strategic Pathway Cards */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-        <PathwayCard pathway={data.pathways?.economicReturn} />
-        <PathwayCard pathway={data.pathways?.soilRestoration} />
-        <PathwayCard pathway={data.pathways?.waterResilience} />
+      {/* Assessment Summary & Regional Climatology (2-Box Vertical Layout) */}
+      <div>
+        <AssessmentSummaryCard summary={summary} />
       </div>
 
-      {/* Comparison & Visualizations */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+      {/* Three Strategic Pathway Cards (with real photos & simple English verdict) */}
+      <div>
+        <div className="flex items-center justify-between mb-4 pb-2 border-b border-emerald-900/10">
+          <div>
+            <h2 className="text-lg sm:text-xl font-bold text-[#173D2A] font-['Plus_Jakarta_Sans']">
+              Your 3 Strategic Rotation Choices
+            </h2>
+            <p className="text-xs sm:text-sm text-[#202820]/65 mt-0.5">
+              Choose the pathway that best matches your farm goal: Maximum yield, soil rejuvenation, or drought defense.
+            </p>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+          <PathwayCard pathway={data.pathways?.economicReturn} />
+          <PathwayCard pathway={data.pathways?.soilRestoration} />
+          <PathwayCard pathway={data.pathways?.waterResilience} />
+        </div>
+      </div>
+
+      {/* Visual Pathway Comparisons & Attainable Yields */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <PathwayComparison pathways={data.pathways} />
         <YieldComparisonChart alternatives={data.rankedAlternatives} />
       </div>
 
       {/* Ranked Alternatives Table */}
-      <div className="mb-8">
+      <div>
         <RankedAlternativesTable alternatives={data.rankedAlternatives} />
       </div>
 
-      {/* Provenance & Scientific Disclosures */}
-      <div className="mb-8">
+      {/* Provenance & Scientific Authority */}
+      <div>
         <ProvenanceFooter provenance={data.provenance} />
       </div>
 
-      {/* Navigation Actions */}
+      {/* Action Navigation Buttons */}
       <div className="flex flex-wrap gap-4 justify-center pt-4">
         <Button variant="primary" size="lg" onClick={handleNavAssessment}>
-          <span>Run Another Assessment</span>
+          <span>Evaluate Another Location</span>
           <ArrowRightIcon className="w-4 h-4 ml-1" />
         </Button>
         <Button variant="secondary" size="lg" onClick={handleNavTransparency}>
-          Scientific Transparency & Citations
+          Scientific Transparency &amp; Methodology
         </Button>
         <Button variant="outline" size="lg" onClick={handleNavHome}>
           Return to Home
