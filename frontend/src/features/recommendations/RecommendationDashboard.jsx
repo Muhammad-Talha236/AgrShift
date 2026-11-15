@@ -181,6 +181,7 @@ export default function RecommendationDashboard({
           city={cityName}
           countryName={countryName}
           coordinates={coordinates}
+          pathways={data.pathways}
         />
       </div>
 

@@ -13,7 +13,7 @@ app.use(
 );
 app.use(
   cors({
-    origin: process.env.CLIENT_URL || '*',
+    origin: process.env.CLIENT_URL ? [process.env.CLIENT_URL, /vercel\.app$/, /localhost/] : true,
     credentials: true,
   })
 );

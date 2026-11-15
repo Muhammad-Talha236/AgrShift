@@ -127,6 +127,42 @@ export default function AssessmentWizard({ onRecommendationsReady, onNavigate })
     setCropRetry((count) => count + 1);
   };
 
+  const loadOfflineCatalog = () => {
+    const offlineCountries = [
+      { iso3: 'PAK', name: 'Pakistan', availableSlices: 15 },
+      { iso3: 'IND', name: 'India', availableSlices: 15 },
+      { iso3: 'USA', name: 'United States', availableSlices: 15 },
+      { iso3: 'CAN', name: 'Canada', availableSlices: 12 },
+      { iso3: 'EGY', name: 'Egypt', availableSlices: 15 },
+      { iso3: 'KEN', name: 'Kenya', availableSlices: 12 },
+      { iso3: 'BRA', name: 'Brazil', availableSlices: 15 },
+      { iso3: 'ARG', name: 'Argentina', availableSlices: 12 },
+      { iso3: 'CHN', name: 'China', availableSlices: 15 },
+      { iso3: 'TUR', name: 'Turkey', availableSlices: 12 },
+      { iso3: 'BGD', name: 'Bangladesh', availableSlices: 12 },
+      { iso3: 'IDN', name: 'Indonesia', availableSlices: 12 },
+      { iso3: 'NGA', name: 'Nigeria', availableSlices: 12 },
+      { iso3: 'ZAF', name: 'South Africa', availableSlices: 12 },
+      { iso3: 'AUS', name: 'Australia', availableSlices: 15 },
+    ];
+    const offlineCrops = [
+      { _id: 'off-wheat', cropId: 'wheat', displayName: 'Wheat' },
+      { _id: 'off-rice', cropId: 'rice', displayName: 'Rice' },
+      { _id: 'off-maize', cropId: 'maize', displayName: 'Maize (Corn)' },
+      { _id: 'off-cotton', cropId: 'cotton', displayName: 'Cotton' },
+      { _id: 'off-sugarcane', cropId: 'sugarcane', displayName: 'Sugarcane' },
+      { _id: 'off-soybean', cropId: 'soybean', displayName: 'Soybean' },
+      { _id: 'off-sorghum', cropId: 'sorghum', displayName: 'Sorghum' },
+      { _id: 'off-potato', cropId: 'potato', displayName: 'Potato' },
+    ];
+    setCountries(offlineCountries);
+    setCrops(offlineCrops);
+    setCountryError('');
+    setCropError('');
+    setCountryLoading(false);
+    setCropLoading(false);
+  };
+
   const detectLiveLocation = () => {
     if (!navigator.geolocation) {
       setLocationError('Live GPS is not supported in this browser.');
@@ -338,10 +374,23 @@ export default function AssessmentWizard({ onRecommendationsReady, onNavigate })
                   <LoadingSpinner message="Loading country list…" />
                 ) : countryError ? (
                   <div className="space-y-3">
-                    <Alert variant="error" title="Could not load countries" message={countryError} />
-                    <Button variant="outline" size="sm" onClick={retryCountries}>
-                      Retry countries
-                    </Button>
+                    <Alert
+                      variant="warning"
+                      title="Backend Server Connection Notice"
+                      message={
+                        countryError.includes('Failed to fetch')
+                          ? 'Could not connect to backend server. On Render free tier, the server sleeps when idle and takes ~30-50s to wake up on the first request. Click "Wake Up & Retry" or load the "Built-in Catalog" below.'
+                          : countryError
+                      }
+                    />
+                    <div className="flex flex-wrap items-center gap-2">
+                      <Button variant="primary" size="sm" onClick={retryCountries}>
+                        🔄 Wake Up &amp; Retry
+                      </Button>
+                      <Button variant="outline" size="sm" onClick={loadOfflineCatalog}>
+                        ⚡ Use Built-in Catalog (15+ Nations)
+                      </Button>
+                    </div>
                   </div>
                 ) : (
                   <Select
@@ -407,10 +456,23 @@ export default function AssessmentWizard({ onRecommendationsReady, onNavigate })
               <LoadingSpinner message="Loading crops…" />
             ) : cropError ? (
               <div className="space-y-3">
-                <Alert variant="error" title="Could not verify crops" message={cropError} />
-                <Button variant="outline" onClick={retryCrops}>
-                  Retry crops
-                </Button>
+                <Alert
+                  variant="warning"
+                  title="Crop Verification Notice"
+                  message={
+                    cropError.includes('Failed to fetch')
+                      ? 'Backend server is starting up. Please click "Wake Up & Retry" or load the "Built-in Catalog".'
+                      : cropError
+                  }
+                />
+                <div className="flex flex-wrap items-center gap-2">
+                  <Button variant="primary" size="sm" onClick={retryCrops}>
+                    🔄 Wake Up &amp; Retry
+                  </Button>
+                  <Button variant="outline" size="sm" onClick={loadOfflineCatalog}>
+                    ⚡ Use Built-in Catalog (8 Crops)
+                  </Button>
+                </div>
               </div>
             ) : crops.length === 0 ? (
               <EmptyState
