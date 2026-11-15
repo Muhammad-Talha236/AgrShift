@@ -1,39 +1,29 @@
 import React, { useState, useEffect } from 'react';
+import AppLayout from './components/layout/AppLayout';
 import LandingPage from './pages/LandingPage';
-import { RecommendationDashboard } from './features/recommendations';
+import AssessmentPage from './pages/AssessmentPage';
+import RecommendationPage from './pages/RecommendationPage';
+import TransparencyPage from './pages/TransparencyPage';
 
-/**
- * AgriShift — Main Application Router
- * Pages: home, recommendations
- *
- * Integration notes:
- * - When Shahzaman's Assessment Wizard is ready, it should call
- *   onSubmitAssessment(payload) to navigate to the dashboard with real farmer input.
- * - For now, "Get Started" uses a demo payload so the dashboard is functional.
- */
-
-// Demo assessment payload for testing — will be replaced by Shahzaman's Assessment Wizard
-const DEMO_PAYLOAD = {
-  country: 'PAK',
-  currentCrop: 'wheat',
-  waterRegime: 'irrigated',
-  managementLevel: 'high',
-};
+const VALID_ROUTES = ['home', 'assessment', 'recommendation', 'transparency'];
 
 export default function App() {
   const [currentPage, setCurrentPage] = useState('home');
-  const [assessmentPayload, setAssessmentPayload] = useState(null);
 
   useEffect(() => {
     const handleHashChange = () => {
-      const hash = window.location.hash.replace('#', '');
-      if (hash === 'recommendations') {
-        setCurrentPage('recommendations');
-      } else if (hash === 'prediction') {
-        // Legacy hash — redirect to recommendations with demo payload
-        setAssessmentPayload(DEMO_PAYLOAD);
-        setCurrentPage('recommendations');
+      const rawHash = window.location.hash.replace(/^#\/?/, '').toLowerCase().trim();
+
+      // Backward compatibility: map old #prediction hash to #assessment
+      if (rawHash === 'prediction') {
+        setCurrentPage('assessment');
+        return;
+      }
+
+      if (VALID_ROUTES.includes(rawHash)) {
+        setCurrentPage(rawHash);
       } else {
+        // Default / fallback to home
         setCurrentPage('home');
       }
     };
@@ -44,46 +34,19 @@ export default function App() {
   }, []);
 
   const navigateTo = (page) => {
-    setCurrentPage(page);
-    window.location.hash = page === 'home' ? '#home' : `#${page}`;
+    const targetPage = page === 'prediction' ? 'assessment' : page;
+    const resolvedPage = VALID_ROUTES.includes(targetPage) ? targetPage : 'home';
+    setCurrentPage(resolvedPage);
+    window.location.hash = `#${resolvedPage}`;
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  /**
-   * Called by Assessment Wizard (Shahzaman) when farmer submits the form.
-   * Routes to recommendation dashboard with the real payload.
-   */
-  const handleSubmitAssessment = (payload) => {
-    setAssessmentPayload(payload);
-    navigateTo('recommendations');
-  };
-
-  /**
-   * "Get Started" from landing — uses demo payload until Assessment Wizard is integrated.
-   * When Assessment Wizard is ready, this should navigate to 'assessment' page instead.
-   */
-  const handleGetStarted = (page) => {
-    if (page === 'prediction' || page === 'recommendations') {
-      setAssessmentPayload(DEMO_PAYLOAD);
-      navigateTo('recommendations');
-    } else {
-      navigateTo(page);
-    }
-  };
-
-  if (currentPage === 'recommendations') {
-    return (
-      <RecommendationDashboard
-        assessmentPayload={assessmentPayload}
-        onBackToAssessment={() => {
-          // When Assessment Wizard exists: navigateTo('assessment')
-          // For now, go back to home
-          navigateTo('home');
-        }}
-        onBackToHome={() => navigateTo('home')}
-      />
-    );
-  }
-
-  return <LandingPage onNavigate={handleGetStarted} />;
+  return (
+    <AppLayout activePage={currentPage} onNavigate={navigateTo}>
+      {currentPage === 'home' && <LandingPage onNavigate={navigateTo} />}
+      {currentPage === 'assessment' && <AssessmentPage onNavigate={navigateTo} />}
+      {currentPage === 'recommendation' && <RecommendationPage onNavigate={navigateTo} />}
+      {currentPage === 'transparency' && <TransparencyPage onNavigate={navigateTo} />}
+    </AppLayout>
+  );
 }
